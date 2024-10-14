@@ -85,20 +85,20 @@ networks:
 #   - name: WrapperERC20Personal
 - id: 100
   # start_block: 12529458
-  start_block: 35732788
+  start_block: 36453718
   contracts:
   - name: HubV2
     address:
-    - 0xa5c7ADAE2fd3844f12D52266Cb7926f8649869Da
+    - 0x55241b3B4705f4624b282C6bFb162132a8B93B5C
   - name: ERC20Lift
     address:
-    - 0xB6B79BeEfd58cf33b298A456934554cf440354aD
+    - 0x33121800494cF2484887bBEac7d02ad927AC3122
   - name: StandardTreasury
     address:
-    - 0xbb76CF35ec106c5c7a447246257dcfCB7244cA04
+    - 0xcCa7c10c19A9d9b7e583C1A05A57967E62f91F8D
   - name: NameRegistry
     address:
-    - 0x738fFee24770d0DE1f912adf2B48b0194780E9AD
+    - 0xe2f033e8912dE80A363e3eFE9D840F346229bCCC
   - name: WrapperERC20Personal
   - name: SafeAccount
 

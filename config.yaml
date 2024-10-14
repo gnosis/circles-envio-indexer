@@ -20,8 +20,7 @@ contracts:
 - name: HubV2
   handler: src/EventHandlers.ts
   events:
-  - event: RegisterHuman(address indexed avatar)
-  - event: InviteHuman(address indexed inviter, address indexed invited)
+  - event: RegisterHuman(address indexed avatar, address indexed inviter)
   - event: RegisterOrganization(address indexed organization, string name)
   - event: RegisterGroup(address indexed group, address indexed mint, address indexed treasury, string name, string symbol)
   - event: Trust(address indexed truster, address indexed trustee, uint256 expiryTime)

@@ -197,29 +197,6 @@ SafeAccount.ExecutionSuccess.handlerWithLoader({
   },
 });
 
-HubV2.InviteHuman.handler(async ({ event, context }) => {
-  const avatarEntity: Avatar = {
-    id: event.params.invited,
-    avatarType: "InviteHuman",
-    blockNumber: event.block.number,
-    timestamp: event.block.timestamp,
-    transactionHash: event.transaction.hash,
-    invitedBy: event.params.inviter,
-    version: 2,
-    logIndex: event.logIndex,
-    tokenId: bytesToBigInt(toBytes(event.params.invited)).toString(),
-    cidV0Digest: undefined,
-    name: undefined,
-    transactionIndex: event.transaction.transactionIndex,
-    wrappedTokenId: undefined,
-    balance: 0n,
-    lastMint: 0n,
-  };
-
-  context.Avatar.set(avatarEntity);
-  await incrementStats(context, "signups");
-});
-
 HubV2.RegisterOrganization.handler(async ({ event, context }) => {
   const avatarEntity: Avatar = {
     id: event.params.organization,
@@ -723,4 +700,29 @@ HubV2.Trust.handler(async ({ event, context }) => {
 
   context.TrustRelation.set(entity);
   await incrementStats(context, "trusts");
+
+  // invite
+  const avatar = await context.Avatar.get(event.params.trustee);
+  if (avatar) {
+    const avatarEntity: Avatar = {
+      id: event.params.trustee,
+      avatarType: "Invite",
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionHash: event.transaction.hash,
+      invitedBy: event.params.truster,
+      version: 2,
+      logIndex: event.logIndex,
+      tokenId: undefined,
+      cidV0Digest: undefined,
+      name: undefined,
+      transactionIndex: event.transaction.transactionIndex,
+      wrappedTokenId: undefined,
+      balance: 0n,
+      lastMint: 0n,
+    };
+
+    context.Avatar.set(avatarEntity);
+    await incrementStats(context, "signups");
+  }
 });

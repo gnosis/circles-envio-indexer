@@ -60,7 +60,7 @@ enum AvatarType {
   Signup
   OrganizationSignup
   RegisterHuman
-  InviteHuman
+  Invite
   RegisterGroup
   RegisterOrganization
 }

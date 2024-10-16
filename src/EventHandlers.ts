@@ -703,7 +703,7 @@ HubV2.Trust.handler(async ({ event, context }) => {
 
   // invite
   const avatar = await context.Avatar.get(event.params.trustee);
-  if (avatar) {
+  if (!avatar) {
     const avatarEntity: Avatar = {
       id: event.params.trustee,
       avatarType: "Invite",

@@ -96,7 +96,7 @@ type Avatar {
   # groups only
   name: String
   # IPFS CID of the avatar's profile
-  cidV0Digest: String
+  cidV0: String
   # balances of all tokens
   balances: [AvatarBalance!]! @derivedFrom(field: "avatar")
   # balance of all tokens aggregated

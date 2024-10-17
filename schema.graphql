@@ -47,8 +47,8 @@ type TrustRelation {
   transactionIndex: Int!
   logIndex: Int!
   version: Int!
-  trustee: String!
-  truster: String!
+  trustee: Avatar!
+  truster: Avatar!
   # v2 only or always UInt256.MAX in case of v1
   expiryTime: BigInt!
   # v1 only or always '100' in case of v2
@@ -96,12 +96,13 @@ type Avatar {
   # groups only
   name: String
   # IPFS CID of the avatar's profile
-  cidV0Digest: String
+  cidV0: String
   # balances of all tokens
   balances: [AvatarBalance!]! @derivedFrom(field: "avatar")
   # balance of all tokens aggregated
   balance: BigInt!
   lastMint: BigInt!
+  trustedByN: Int!
 }
 
 enum TokenType {

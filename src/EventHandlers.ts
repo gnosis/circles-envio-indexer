@@ -28,6 +28,7 @@ import {
 } from "viem";
 import { incrementStats } from "./incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
+import { uint8ArrayToCidV0 } from "./utils";
 
 function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
   return `${avatarId}-${tokenId}`;
@@ -84,12 +85,13 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
     version: 1,
     logIndex: event.logIndex,
     tokenId: undefined,
-    cidV0Digest: undefined,
+    cidV0: undefined,
     name: undefined,
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
     lastMint: 0n,
+    trustedByN: 0,
   };
 
   context.Avatar.set(avatarEntity);
@@ -113,12 +115,13 @@ Hub.Signup.handler(async ({ event, context }) => {
     version: 1,
     logIndex: event.logIndex,
     tokenId: event.params.token,
-    cidV0Digest: undefined,
+    cidV0: undefined,
     name: undefined,
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: avatarBalance?.balance || 0n,
     lastMint: 0n,
+    trustedByN: 0,
   };
 
   context.Avatar.set(avatarEntity);
@@ -160,12 +163,13 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       version: 2,
       logIndex: event.logIndex,
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
-      cidV0Digest: undefined,
+      cidV0: undefined,
       name: undefined,
       transactionIndex: event.transaction.transactionIndex,
       wrappedTokenId: undefined,
       balance: 0n,
       lastMint: 0n,
+      trustedByN: 0,
     };
 
     context.Avatar.set(avatarEntity);
@@ -208,12 +212,13 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     version: 2,
     logIndex: event.logIndex,
     tokenId: bytesToBigInt(toBytes(event.params.organization)).toString(),
-    cidV0Digest: undefined,
+    cidV0: undefined,
     name: event.params.name,
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
     lastMint: 0n,
+    trustedByN: 0,
   };
 
   context.Avatar.set(avatarEntity);
@@ -231,12 +236,13 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
     version: 2,
     logIndex: event.logIndex,
     tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
-    cidV0Digest: undefined,
+    cidV0: undefined,
     name: event.params.name,
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
     lastMint: 0n,
+    trustedByN: 0,
   };
 
   context.Avatar.set(avatarEntity);
@@ -329,7 +335,17 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
   if (avatar) {
     context.Avatar.set({
       ...avatar,
-      cidV0Digest: event.params.metadataDigest,
+      cidV0: uint8ArrayToCidV0(
+        Uint8Array.from(
+          Buffer.from(
+            event.params.metadataDigest.slice(
+              2,
+              event.params.metadataDigest.length
+            ),
+            "hex"
+          )
+        )
+      ),
     });
   }
 });
@@ -640,8 +656,8 @@ Hub.Trust.handler(async ({ event, context }) => {
     transactionIndex: event.transaction.transactionIndex,
     logIndex: event.logIndex,
     version: 1,
-    trustee: event.params.canSendTo,
-    truster: event.params.user,
+    trustee_id: event.params.canSendTo,
+    truster_id: event.params.user,
     expiryTime: maxUint256,
     limit: event.params.limit,
     isMutual,
@@ -659,7 +675,37 @@ HubV2.Trust.handler(async ({ event, context }) => {
   );
   const timeDifference =
     event.params.expiryTime - BigInt(event.block.timestamp);
-  if (timeDifference < 3600n) {
+  const isUntrust = timeDifference < 3600n;
+
+  // invite
+  const avatarTrustee = await context.Avatar.get(event.params.trustee);
+  if (!avatarTrustee) {
+    context.Avatar.set({
+      id: event.params.trustee,
+      avatarType: "Invite",
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionHash: event.transaction.hash,
+      invitedBy: event.params.truster,
+      version: 2,
+      logIndex: event.logIndex,
+      tokenId: undefined,
+      cidV0: undefined,
+      name: undefined,
+      transactionIndex: event.transaction.transactionIndex,
+      wrappedTokenId: undefined,
+      balance: 0n,
+      lastMint: 0n,
+      trustedByN: 1,
+    });
+  } else {
+    context.Avatar.set({
+      ...avatarTrustee,
+      trustedByN: isUntrust ? avatarTrustee.trustedByN - 1 : avatarTrustee.trustedByN + 1,
+    });
+  }
+
+  if (isUntrust) {
     // this is untrust
     const trustRelation = await context.TrustRelation.get(trustId);
     if (trustRelation) {
@@ -691,8 +737,8 @@ HubV2.Trust.handler(async ({ event, context }) => {
     transactionIndex: event.transaction.transactionIndex,
     logIndex: event.logIndex,
     version: 2,
-    trustee: event.params.trustee,
-    truster: event.params.truster,
+    trustee_id: event.params.trustee,
+    truster_id: event.params.truster,
     expiryTime: event.params.expiryTime,
     limit: parseEther("100"),
     isMutual,
@@ -700,29 +746,4 @@ HubV2.Trust.handler(async ({ event, context }) => {
 
   context.TrustRelation.set(entity);
   await incrementStats(context, "trusts");
-
-  // invite
-  const avatar = await context.Avatar.get(event.params.trustee);
-  if (avatar) {
-    const avatarEntity: Avatar = {
-      id: event.params.trustee,
-      avatarType: "Invite",
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionHash: event.transaction.hash,
-      invitedBy: event.params.truster,
-      version: 2,
-      logIndex: event.logIndex,
-      tokenId: undefined,
-      cidV0Digest: undefined,
-      name: undefined,
-      transactionIndex: event.transaction.transactionIndex,
-      wrappedTokenId: undefined,
-      balance: 0n,
-      lastMint: 0n,
-    };
-
-    context.Avatar.set(avatarEntity);
-    await incrementStats(context, "signups");
-  }
 });

@@ -25,10 +25,11 @@ import {
   zeroAddress,
   maxUint256,
   parseEther,
+  Address,
 } from "viem";
 import { incrementStats } from "./incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
-import { uint8ArrayToCidV0 } from "./utils";
+import { getProfileMetadataFromIpfs, uint8ArrayToCidV0 } from "./utils";
 
 function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
   return `${avatarId}-${tokenId}`;
@@ -92,6 +93,7 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.organization,
   };
 
   context.Avatar.set(avatarEntity);
@@ -122,6 +124,7 @@ Hub.Signup.handler(async ({ event, context }) => {
     balance: avatarBalance?.balance || 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.user,
   };
 
   context.Avatar.set(avatarEntity);
@@ -170,6 +173,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       balance: 0n,
       lastMint: 0n,
       trustedByN: 0,
+      profile_id: event.params.avatar,
     };
 
     context.Avatar.set(avatarEntity);
@@ -219,6 +223,7 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.organization,
   };
 
   context.Avatar.set(avatarEntity);
@@ -243,6 +248,7 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.group,
   };
 
   context.Avatar.set(avatarEntity);
@@ -333,19 +339,34 @@ StandardTreasury.GroupRedeemCollateralReturn.handler(
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.avatar);
   if (avatar) {
+    const cidV0Formatted = uint8ArrayToCidV0(
+      Uint8Array.from(
+        Buffer.from(
+          event.params.metadataDigest.slice(
+            2,
+            event.params.metadataDigest.length
+          ),
+          "hex"
+        )
+      )
+    );
+
+    const profileMetadata = await getProfileMetadataFromIpfs(
+      cidV0Formatted,
+      avatar.id as Address
+    );
+
+    context.Profile.set({
+      id: avatar.id,
+      name: profileMetadata?.name || "name not found",
+      description: profileMetadata?.description || "",
+      previewImageUrl: profileMetadata?.previewImageUrl || "",
+      imageUrl: profileMetadata?.imageUrl || "",
+    });
+
     context.Avatar.set({
       ...avatar,
-      cidV0: uint8ArrayToCidV0(
-        Uint8Array.from(
-          Buffer.from(
-            event.params.metadataDigest.slice(
-              2,
-              event.params.metadataDigest.length
-            ),
-            "hex"
-          )
-        )
-      ),
+      cidV0: cidV0Formatted,
     });
   }
 });
@@ -697,11 +718,14 @@ HubV2.Trust.handler(async ({ event, context }) => {
       balance: 0n,
       lastMint: 0n,
       trustedByN: 1,
+      profile_id: event.params.trustee,
     });
   } else {
     context.Avatar.set({
       ...avatarTrustee,
-      trustedByN: isUntrust ? avatarTrustee.trustedByN - 1 : avatarTrustee.trustedByN + 1,
+      trustedByN: isUntrust
+        ? avatarTrustee.trustedByN - 1
+        : avatarTrustee.trustedByN + 1,
     });
   }
 

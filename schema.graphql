@@ -103,6 +103,15 @@ type Avatar {
   balance: BigInt!
   lastMint: BigInt!
   trustedByN: Int!
+  profile: Profile
+}
+
+type Profile {
+  id: ID!
+  name: String!
+  description: String
+  previewImageUrl: String
+  imageUrl: String
 }
 
 enum TokenType {

@@ -103,6 +103,7 @@ type Avatar {
   balance: BigInt!
   lastMint: BigInt!
   trustedByN: Int!
+  profile: Profile
 }
 
 type Profile {

@@ -29,7 +29,7 @@ export async function getProfileMetadataFromIpfs(
   }
 
   const cache = await ProfileCache.init();
-  const _metadata = await cache.read(cidV0);
+  const _metadata = await cache.read(avatarId);
 
   if (_metadata) {
     return _metadata;
@@ -37,11 +37,11 @@ export async function getProfileMetadataFromIpfs(
 
   const externalResponse = await fetch(`https://ipfs.io/ipfs/${cidV0}`);
   const externalData = await externalResponse.json();
-  console.log(externalData, "metadata from IPFS <--");
+
   if (!externalData) {
     return null;
   }
-  console.log(externalData, "external data");
+
   await cache.add(avatarId, externalData as Profile);
   return externalData as Profile;
 }

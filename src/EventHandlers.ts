@@ -93,6 +93,7 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.organization,
   };
 
   context.Avatar.set(avatarEntity);
@@ -123,6 +124,7 @@ Hub.Signup.handler(async ({ event, context }) => {
     balance: avatarBalance?.balance || 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.user,
   };
 
   context.Avatar.set(avatarEntity);
@@ -171,6 +173,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       balance: 0n,
       lastMint: 0n,
       trustedByN: 0,
+      profile_id: event.params.avatar,
     };
 
     context.Avatar.set(avatarEntity);
@@ -220,6 +223,7 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.organization,
   };
 
   context.Avatar.set(avatarEntity);
@@ -244,6 +248,7 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: 0n,
     trustedByN: 0,
+    profile_id: event.params.group,
   };
 
   context.Avatar.set(avatarEntity);
@@ -350,6 +355,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       cidV0Formatted,
       avatar.id as Address
     );
+
     context.Profile.set({
       id: avatar.id,
       name: profileMetadata?.name || "name not found",
@@ -712,6 +718,7 @@ HubV2.Trust.handler(async ({ event, context }) => {
       balance: 0n,
       lastMint: 0n,
       trustedByN: 1,
+      profile_id: event.params.trustee,
     });
   } else {
     context.Avatar.set({

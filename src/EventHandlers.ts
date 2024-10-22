@@ -25,6 +25,7 @@ import {
   zeroAddress,
   maxUint256,
   parseEther,
+  Address,
 } from "viem";
 import { incrementStats } from "./incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
@@ -345,15 +346,18 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       )
     );
 
-    /*    const profileMetadata = await getProfileMetadataFromIpfs(cidV0Formatted);
+    const profileMetadata = await getProfileMetadataFromIpfs(
+      cidV0Formatted,
+      avatar.id as Address
+    );
     context.Profile.set({
       id: avatar.id,
       name: profileMetadata?.name || "name not found",
-      description: profileMetadata?.description,
-      previewImageUrl: profileMetadata?.previewImageUrl,
-      imageUrl: profileMetadata?.imageUrl,
+      description: profileMetadata?.description || "",
+      previewImageUrl: profileMetadata?.previewImageUrl || "",
+      imageUrl: profileMetadata?.imageUrl || "",
     });
- */
+
     context.Avatar.set({
       ...avatar,
       cidV0: cidV0Formatted,

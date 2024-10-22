@@ -1,4 +1,7 @@
 import multihash from "multihashes";
+import { Profile } from "./types";
+import { ProfileCache } from "./cache";
+import { Address } from "viem";
 
 /**
  * Converts a 32-byte UInt8Array back to a CIDv0 string by adding the hashing algorithm identifier.
@@ -17,19 +20,21 @@ export function uint8ArrayToCidV0(uint8Array: Uint8Array) {
   return multihash.toB58String(multihashBytes);
 }
 
-export interface Profile {
-  name: string;
-  description?: string;
-  previewImageUrl?: string;
-  imageUrl?: string;
-}
-
 export async function getProfileMetadataFromIpfs(
-  cidV0: string
+  cidV0: string,
+  avatarId: Address
 ): Promise<Profile | null> {
   if (!cidV0) {
     return null;
   }
+
+  const cache = await ProfileCache.init();
+  const _metadata = await cache.read(cidV0);
+
+  if (_metadata) {
+    return _metadata;
+  }
+
   const externalResponse = await fetch(`https://ipfs.io/ipfs/${cidV0}`);
   const externalData = await externalResponse.json();
   console.log(externalData, "metadata from IPFS <--");
@@ -37,5 +42,6 @@ export async function getProfileMetadataFromIpfs(
     return null;
   }
   console.log(externalData, "external data");
+  await cache.add(avatarId, externalData as Profile);
   return externalData as Profile;
 }

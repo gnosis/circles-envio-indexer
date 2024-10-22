@@ -105,6 +105,14 @@ type Avatar {
   trustedByN: Int!
 }
 
+type Profile {
+  id: ID!
+  name: String!
+  description: String
+  previewImageUrl: String
+  imageUrl: String
+}
+
 enum TokenType {
   RegisterGroup
   RegisterHuman

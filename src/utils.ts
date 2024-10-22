@@ -16,3 +16,26 @@ export function uint8ArrayToCidV0(uint8Array: Uint8Array) {
   // Encode the Multihash as a base58 CIDv0 string
   return multihash.toB58String(multihashBytes);
 }
+
+export interface Profile {
+  name: string;
+  description?: string;
+  previewImageUrl?: string;
+  imageUrl?: string;
+}
+
+export async function getProfileMetadataFromIpfs(
+  cidV0: string
+): Promise<Profile | null> {
+  if (!cidV0) {
+    return null;
+  }
+  const externalResponse = await fetch(`https://ipfs.io/ipfs/${cidV0}`);
+  const externalData = await externalResponse.json();
+  console.log(externalData, "metadata from IPFS <--");
+  if (!externalData) {
+    return null;
+  }
+  console.log(externalData, "external data");
+  return externalData as Profile;
+}

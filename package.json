@@ -24,7 +24,8 @@
   "dependencies": {
     "envio": "2.4.3",
     "viem": "2.21.0",
-    "multihashes": "^4.0.3"
+    "multihashes": "^4.0.3",
+    "sqlite3": "^5.1.7"
   },
   "optionalDependencies": {
     "generated": "./generated"

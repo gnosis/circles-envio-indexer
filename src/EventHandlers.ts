@@ -28,7 +28,7 @@ import {
 } from "viem";
 import { incrementStats } from "./incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
-import { uint8ArrayToCidV0 } from "./utils";
+import { getProfileMetadataFromIpfs, uint8ArrayToCidV0 } from "./utils";
 
 function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
   return `${avatarId}-${tokenId}`;
@@ -333,19 +333,30 @@ StandardTreasury.GroupRedeemCollateralReturn.handler(
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.avatar);
   if (avatar) {
+    const cidV0Formatted = uint8ArrayToCidV0(
+      Uint8Array.from(
+        Buffer.from(
+          event.params.metadataDigest.slice(
+            2,
+            event.params.metadataDigest.length
+          ),
+          "hex"
+        )
+      )
+    );
+
+    /*    const profileMetadata = await getProfileMetadataFromIpfs(cidV0Formatted);
+    context.Profile.set({
+      id: avatar.id,
+      name: profileMetadata?.name || "name not found",
+      description: profileMetadata?.description,
+      previewImageUrl: profileMetadata?.previewImageUrl,
+      imageUrl: profileMetadata?.imageUrl,
+    });
+ */
     context.Avatar.set({
       ...avatar,
-      cidV0: uint8ArrayToCidV0(
-        Uint8Array.from(
-          Buffer.from(
-            event.params.metadataDigest.slice(
-              2,
-              event.params.metadataDigest.length
-            ),
-            "hex"
-          )
-        )
-      ),
+      cidV0: cidV0Formatted,
     });
   }
 });
@@ -701,7 +712,9 @@ HubV2.Trust.handler(async ({ event, context }) => {
   } else {
     context.Avatar.set({
       ...avatarTrustee,
-      trustedByN: isUntrust ? avatarTrustee.trustedByN - 1 : avatarTrustee.trustedByN + 1,
+      trustedByN: isUntrust
+        ? avatarTrustee.trustedByN - 1
+        : avatarTrustee.trustedByN + 1,
     });
   }
 

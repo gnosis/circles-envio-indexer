@@ -352,10 +352,13 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       )
     );
 
-    const profileMetadata = await getProfileMetadataFromIpfs(
-      cidV0Formatted,
-      avatar.id as Address
-    );
+    let profileMetadata: Profile | null = null;
+    try {
+      profileMetadata = await getProfileMetadataFromIpfs(
+        cidV0Formatted,
+        avatar.id as Address
+      );
+    } catch (_) {}
 
     context.Profile.set({
       id: avatar.id,

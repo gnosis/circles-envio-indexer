@@ -101,8 +101,8 @@ type Avatar {
   balances: [AvatarBalance!]! @derivedFrom(field: "avatar")
   # balance of all tokens aggregated
   balance: BigInt!
-  lastMint: Int!
-  mintEndPeriod: BigInt!
+  lastMint: Int
+  mintEndPeriod: BigInt
   trustedByN: Int!
   profile: Profile
 }

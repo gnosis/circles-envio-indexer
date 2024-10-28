@@ -6,7 +6,7 @@ field_selection:
     - transactionIndex
 contracts:
 - name: Hub
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV1.ts
   events:
   - event: HubTransfer(address indexed from, address indexed to, uint256 amount)
   - event: OrganizationSignup(address indexed organization)
@@ -14,7 +14,7 @@ contracts:
   - event: Trust(address indexed canSendTo, address indexed user, uint256 limit)
 - name: PersonalCRC
   abi_file_path: abis/PersonalCRC.json
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV1.ts
   events:
   - event: Transfer(address indexed from, address indexed to, uint256 amount)
 - name: HubV2

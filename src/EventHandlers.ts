@@ -261,20 +261,6 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
   await incrementStats(context, "signups");
 });
 
-HubV2.Stopped.handler(async ({ event, context }) => {
-  // const avatar = await context.Avatar.get(event.params.avatar);
-  // if (avatar) {
-  //   context.Avatar.set({
-  //     ...avatar,
-  //     stopped: true,
-  //   });
-  // }
-});
-
-HubV2.ApprovalForAll.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
-});
-
 HubV2.PersonalMint.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.human);
   if (avatar) {
@@ -379,10 +365,6 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       cidV0: cidV0Formatted,
     });
   }
-});
-
-HubV2.URI.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
 });
 
 // ###############

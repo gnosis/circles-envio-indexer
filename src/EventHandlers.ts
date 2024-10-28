@@ -92,7 +92,8 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
-    lastMint: 0n,
+    lastMint: 0,
+    mintEndPeriod: 0n,
     trustedByN: 0,
     profile_id: event.params.organization,
   };
@@ -123,7 +124,8 @@ Hub.Signup.handler(async ({ event, context }) => {
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: avatarBalance?.balance || 0n,
-    lastMint: 0n,
+    lastMint: 0,
+    mintEndPeriod: 0n,
     trustedByN: 0,
     profile_id: event.params.user,
   };
@@ -172,7 +174,8 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       transactionIndex: event.transaction.transactionIndex,
       wrappedTokenId: undefined,
       balance: 0n,
-      lastMint: 0n,
+      lastMint: 0,
+      mintEndPeriod: 0n,
       trustedByN: 0,
       profile_id: event.params.avatar,
     };
@@ -222,7 +225,8 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
-    lastMint: 0n,
+    lastMint: 0,
+    mintEndPeriod: 0n,
     trustedByN: 0,
     profile_id: event.params.organization,
   };
@@ -247,7 +251,8 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
-    lastMint: 0n,
+    lastMint: 0,
+    mintEndPeriod: 0n,
     trustedByN: 0,
     profile_id: event.params.group,
   };
@@ -275,7 +280,8 @@ HubV2.PersonalMint.handler(async ({ event, context }) => {
   if (avatar) {
     context.Avatar.set({
       ...avatar,
-      lastMint: event.params.endPeriod,
+      lastMint: event.block.timestamp,
+      mintEndPeriod: event.params.endPeriod,
     });
   }
 });
@@ -723,7 +729,8 @@ HubV2.Trust.handler(async ({ event, context }) => {
       transactionIndex: event.transaction.transactionIndex,
       wrappedTokenId: undefined,
       balance: 0n,
-      lastMint: 0n,
+      lastMint: 0,
+      mintEndPeriod: 0n,
       trustedByN: 1,
       profile_id: event.params.trustee,
     });

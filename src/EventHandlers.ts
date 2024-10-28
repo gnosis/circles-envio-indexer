@@ -30,6 +30,7 @@ import {
 import { incrementStats } from "./incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
 import { getProfileMetadataFromIpfs, uint8ArrayToCidV0 } from "./utils";
+import { Profile } from "./types";
 
 function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
   return `${avatarId}-${tokenId}`;
@@ -689,6 +690,9 @@ Hub.Trust.handler(async ({ event, context }) => {
 });
 
 HubV2.Trust.handler(async ({ event, context }) => {
+  if (event.params.trustee === event.params.truster) {
+    return;
+  }
   const trustId = `${event.params.truster}${event.params.trustee}`;
   const oppositeTrustId = `${event.params.trustee}${event.params.truster}`;
   const oppositeTrustRelation = await context.TrustRelation.get(

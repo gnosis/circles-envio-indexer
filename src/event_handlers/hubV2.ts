@@ -187,7 +187,7 @@ HubV2.PersonalMint.handler(async ({ event, context }) => {
     context.Avatar.set({
       ...avatar,
       lastMint: event.block.timestamp,
-      mintEndPeriod: event.params.endPeriod,
+      mintEndPeriod: parseInt(event.params.endPeriod.toString()),
     });
   }
 });

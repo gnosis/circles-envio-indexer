@@ -103,7 +103,7 @@ type Avatar {
   # balance of all tokens aggregated
   balance: BigInt!
   lastMint: Int
-  mintEndPeriod: BigInt
+  mintEndPeriod: Int
   trustedByN: Int!
   profile: Profile
 }

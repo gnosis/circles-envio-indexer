@@ -18,7 +18,7 @@ contracts:
   events:
   - event: Transfer(address indexed from, address indexed to, uint256 amount)
 - name: HubV2
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV2.ts
   events:
   - event: RegisterHuman(address indexed avatar, address indexed inviter)
   - event: RegisterOrganization(address indexed organization, string name)
@@ -30,12 +30,12 @@ contracts:
   - event: TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)
   - event: TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)
 - name: ERC20Lift
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV2.ts
   events:
   - event: ProxyCreation(address proxy, address masterCopy)
   - event: ERC20WrapperDeployed(address indexed avatar, address indexed erc20Wrapper, uint8 circlesType)
 - name: StandardTreasury
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV2.ts
   events:
   - event: CreateVault(address indexed group, address indexed vault)
   - event: GroupMintSingle(address indexed group, uint256 indexed id, uint256 value, bytes userData)
@@ -44,11 +44,11 @@ contracts:
   - event: GroupRedeemCollateralReturn(address indexed group, address indexed to, uint256[] ids, uint256[] values)
   - event: GroupRedeemCollateralBurn(address indexed group, uint256[] ids, uint256[] values)
 - name: NameRegistry
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV2.ts
   events:
   - event: UpdateMetadataDigest(address indexed avatar, bytes32 metadataDigest)
 - name: WrapperERC20Personal
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV2.ts
   events:
   - event: Transfer(address indexed from, address indexed to, uint256 value)
   - event: DepositDemurraged(address indexed account, uint256 amount, uint256 inflationaryAmount)
@@ -56,7 +56,7 @@ contracts:
   - event: DepositInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
   - event: WithdrawInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
 - name: SafeAccount
-  handler: src/EventHandlers.ts
+  handler: src/event_handlers/hubV2.ts
   events:
     - event: ExecutionSuccess(bytes32 txHash, uint256 payment)
 

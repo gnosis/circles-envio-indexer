@@ -397,6 +397,7 @@ const handleTransfer = async ({
       token: tokens[i],
       transferType,
       version,
+      isPartOfStream: false,
     };
     context.Transfer.set(transferEntity);
 
@@ -424,8 +425,51 @@ const handleTransfer = async ({
   }
 };
 
-HubV2.StreamCompleted.handler(async ({ event, context }) => {
-  // TODO: Implement handler here (waiting for pathfinder v2)
+HubV2.StreamCompleted.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    let transfers = await context.Transfer.getWhere.transactionHash.eq(
+      event.transaction.hash
+    );
+
+    return { transfers };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { transfers } = loaderReturn;
+
+    // delete the transfers only
+    // it's important to not reverse balances because of how the pathfinder works.
+    for (let i = 0; i < transfers.length; i++) {
+      const tx = await context.Transfer.get(transfers[i].id);
+      if (tx) {
+        context.Transfer.set({
+          ...tx,
+          isPartOfStream: true,
+        });
+        // decrese transfer count
+      }
+    }
+
+    // register as transfer
+    context.Transfer.set({
+      id: `${event.transaction.hash}-stream`,
+      safeTxHash: undefined,
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionIndex: event.transaction.transactionIndex,
+      transactionHash: event.transaction.hash,
+      logIndex: event.logIndex,
+      from: event.params.from,
+      to: event.params.to,
+      operator: undefined,
+      value: event.params.amounts.reduce((a, b) => a + b, 0n),
+      // TODO: fix - this isn't always true, since it can be multiple tokens
+      // eg. 0xe185f8e1f4b99383d5c801c7796b15de62e7df220087868440e6f59be5ce3909
+      token: event.params.ids[0].toString(),
+      transferType: "StreamCompleted",
+      version: 2,
+      isPartOfStream: false,
+    });
+  },
 });
 
 HubV2.TransferSingle.handler(

@@ -104,6 +104,7 @@ type Avatar {
   balance: BigInt!
   lastMint: Int
   mintEndPeriod: Int
+  lastDemurrageUpdate: Int
   trustedByN: Int!
   profile: Profile
 }

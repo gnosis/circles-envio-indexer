@@ -29,6 +29,7 @@ contracts:
   - event: PersonalMint(address indexed human, uint256 amount, uint256 period, uint256 endPeriod)
   - event: TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)
   - event: TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)
+  - event: DiscountCost(address indexed account, uint256 indexed id, uint256 discountCost)
 - name: ERC20Lift
   handler: src/event_handlers/hubV2.ts
   events:

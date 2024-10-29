@@ -70,6 +70,7 @@ export const handleTransfer = async ({
       token: tokens[i],
       transferType,
       version,
+      isPartOfStream: false,
     };
     context.Transfer.set(transferEntity);
 

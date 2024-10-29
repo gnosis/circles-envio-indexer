@@ -37,6 +37,7 @@ type Transfer {
   transferType: TransferType!
   # is either the v2 token-id or the v1 token address; both in address format
   token: String!
+  isPartOfStream: Boolean!
 }
 
 type TrustRelation {

@@ -12,7 +12,6 @@ import {
   HubV2_TransferSingle_eventArgs,
   HubV2_TransferBatch_eventArgs,
   WrapperERC20Personal_Transfer_eventArgs,
-  Token,
   StandardTreasury,
   NameRegistry,
   SafeAccount,
@@ -96,6 +95,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       balance: 0n,
       lastMint: undefined,
       mintEndPeriod: undefined,
+      lastDemurrageUpdate: undefined,
       trustedByN: 0,
       profile_id: event.params.avatar,
     };
@@ -147,6 +147,7 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: undefined,
     mintEndPeriod: undefined,
+    lastDemurrageUpdate: undefined,
     trustedByN: 0,
     profile_id: event.params.organization,
   };
@@ -173,6 +174,7 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: undefined,
     mintEndPeriod: undefined,
+    lastDemurrageUpdate: undefined,
     trustedByN: 0,
     profile_id: event.params.group,
   };
@@ -498,6 +500,16 @@ HubV2.TransferBatch.handler(
     })
 );
 
+HubV2.DiscountCost.handler(async ({ event, context }) => {
+  const avatar = await context.Avatar.get(event.params.account);
+  if (avatar) {
+    context.Avatar.set({
+      ...avatar,
+      lastDemurrageUpdate: event.block.timestamp,
+    });
+  }
+});
+
 WrapperERC20Personal.Transfer.handler(
   async ({ event, context }) =>
     await handleTransfer({
@@ -602,6 +614,7 @@ HubV2.Trust.handler(async ({ event, context }) => {
       balance: 0n,
       lastMint: undefined,
       mintEndPeriod: undefined,
+      lastDemurrageUpdate: undefined,
       trustedByN: 1,
       profile_id: event.params.trustee,
     });

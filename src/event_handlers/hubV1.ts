@@ -1,13 +1,5 @@
-import {
-  Hub,
-  PersonalCRC,
-  Avatar,
-  TrustRelation,
-  Token,
-} from "generated";
-import {
-  maxUint256,
-} from "viem";
+import { Hub, PersonalCRC, Avatar, TrustRelation, Token } from "generated";
+import { maxUint256 } from "viem";
 import { incrementStats } from "../incrementStats";
 import { handleTransfer } from "../common/handleTransfer";
 
@@ -45,6 +37,7 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
     balance: 0n,
     lastMint: undefined,
     mintEndPeriod: undefined,
+    lastDemurrageUpdate: undefined,
     trustedByN: 0,
     profile_id: event.params.organization,
   };
@@ -77,6 +70,7 @@ Hub.Signup.handler(async ({ event, context }) => {
     balance: avatarBalance?.balance || 0n,
     lastMint: undefined,
     mintEndPeriod: undefined,
+    lastDemurrageUpdate: undefined,
     trustedByN: 0,
     profile_id: event.params.user,
   };

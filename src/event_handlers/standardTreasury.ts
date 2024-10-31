@@ -31,9 +31,7 @@ StandardTreasury.GroupMintSingle.handler(async ({ event, context }) => {
         avatar_id: event.params.group,
         balance: event.params.value,
         inflationaryValue: 0n,
-        isWrapped: false,
         lastCalculated: 0,
-        version: 2,
       });
     }
   }

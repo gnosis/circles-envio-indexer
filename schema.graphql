@@ -74,8 +74,6 @@ type AvatarBalance {
   token: Token!
   avatar: Avatar!
   balance: BigInt!
-  version: Int!
-  isWrapped: Boolean!
   inflationaryValue: BigInt
   lastCalculated: Int
 }

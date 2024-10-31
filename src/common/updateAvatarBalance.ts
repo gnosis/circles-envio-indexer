@@ -1,4 +1,4 @@
-import { handlerContext } from "generated";
+import { AvatarBalance, handlerContext } from "generated";
 import { zeroAddress } from "viem";
 
 function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
@@ -7,30 +7,29 @@ function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
 
 export const updateAvatarBalance = async (
   context: handlerContext,
-  avatarId: string,
-  tokenId: string,
   amount: bigint,
-  version: number,
-  isWrapped: boolean,
-  inflationaryValue: bigint | undefined,
-  lastCalculated: number | undefined
+  blockTimestamp: number,
+  options: Partial<AvatarBalance>
 ) => {
-  if (avatarId === zeroAddress) {
+  const { id: avatarId, token_id: tokenId } = options;
+  if (avatarId === zeroAddress || !avatarId || !tokenId) {
     return;
   }
   const balanceId = makeAvatarBalanceEntityId(avatarId, tokenId);
-  const [avatarBalance, avatar] = await Promise.all([
+  const [avatarBalance, avatar, token] = await Promise.all([
     context.AvatarBalance.get(balanceId),
     context.Avatar.get(avatarId),
+    context.Token.get(tokenId),
   ]);
   if (avatarBalance) {
     let updated = {
       ...avatarBalance,
-      balance: avatarBalance.balance + amount,
+      lastCalculated: blockTimestamp,
     };
-    if (inflationaryValue !== undefined) {
-      updated.inflationaryValue =
-        (avatarBalance.inflationaryValue || 0n) + inflationaryValue;
+    if (token?.tokenType === "WrappedStaticToken") {
+      updated.inflationaryValue = avatarBalance.inflationaryValue! + amount;
+    } else {
+      updated.balance = avatarBalance.balance + amount;
     }
     context.AvatarBalance.set(updated);
   } else {
@@ -39,10 +38,8 @@ export const updateAvatarBalance = async (
       avatar_id: avatarId,
       token_id: tokenId,
       balance: amount,
-      version,
-      isWrapped,
-      inflationaryValue,
-      lastCalculated,
+      inflationaryValue: 0n,
+      lastCalculated: blockTimestamp,
     });
   }
   if (avatar) {

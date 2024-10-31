@@ -76,23 +76,21 @@ export const handleTransfer = async ({
 
     await updateAvatarBalance(
       context,
-      event.params.to,
-      tokens[i],
       values[i],
-      version,
-      isWrapped,
-      undefined,
-      undefined
+      event.block.timestamp,
+      {
+        id: event.params.to,
+        token_id: tokens[i],
+      }
     );
     await updateAvatarBalance(
       context,
-      event.params.from,
-      tokens[i],
       -values[i],
-      version,
-      isWrapped,
-      undefined,
-      undefined
+      event.block.timestamp,
+      {
+        id: event.params.from,
+        token_id: tokens[i],
+      },
     );
     await incrementStats(context, "transfers");
   }

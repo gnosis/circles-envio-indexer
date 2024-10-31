@@ -1,60 +1,82 @@
-import { StandardTreasury } from "generated";
-
-function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
-  return `${avatarId}-${tokenId}`;
-}
+import {
+  HandlerTypes_handler,
+  HandlerTypes_loader,
+  StandardTreasury,
+  StandardTreasury_GroupMintBatch_eventArgs,
+  StandardTreasury_GroupMintSingle_eventArgs,
+  StandardTreasury_GroupRedeem_eventArgs,
+  StandardTreasury_GroupRedeemCollateralBurn_eventArgs,
+  StandardTreasury_GroupRedeemCollateralReturn_eventArgs,
+} from "generated";
+import { Transfer_t } from "generated/src/db/Entities.gen";
+import { TransferType_t } from "generated/src/db/Enums.gen";
 
 StandardTreasury.CreateVault.handler(async ({ event, context }) => {
   // TODO: Implement handler here
 });
 
-StandardTreasury.GroupMintSingle.handler(async ({ event, context }) => {
-  const avatar = await context.Avatar.get(event.params.group);
-  if (avatar) {
-    const balanceId = makeAvatarBalanceEntityId(
-      event.params.group,
-      event.params.id.toString()
-    );
-    const avatarBalance = await context.AvatarBalance.get(balanceId);
-    if (avatarBalance) {
-      context.AvatarBalance.set({
-        ...avatarBalance,
-        balance: avatarBalance.balance + event.params.value,
-      });
-    } else {
-      context.AvatarBalance.set({
-        id: makeAvatarBalanceEntityId(
-          event.params.group,
-          event.params.id.toString()
-        ),
-        token_id: event.params.id.toString(),
-        avatar_id: event.params.group,
-        balance: event.params.value,
-        inflationaryValue: 0n,
-        lastCalculated: 0,
+const loader: HandlerTypes_loader<
+  | StandardTreasury_GroupMintSingle_eventArgs
+  | StandardTreasury_GroupMintBatch_eventArgs
+  | StandardTreasury_GroupRedeem_eventArgs
+  | StandardTreasury_GroupRedeemCollateralReturn_eventArgs
+  | StandardTreasury_GroupRedeemCollateralBurn_eventArgs,
+  {
+    transfers: Transfer_t[];
+  }
+> = async ({ event, context }) => {
+  let transfers = await context.Transfer.getWhere.transactionHash.eq(
+    event.transaction.hash
+  );
+
+  return { transfers };
+};
+
+const createHandler =
+  (
+    transferType: TransferType_t
+  ): HandlerTypes_handler<
+    | StandardTreasury_GroupMintSingle_eventArgs
+    | StandardTreasury_GroupMintBatch_eventArgs
+    | StandardTreasury_GroupRedeem_eventArgs
+    | StandardTreasury_GroupRedeemCollateralReturn_eventArgs
+    | StandardTreasury_GroupRedeemCollateralBurn_eventArgs,
+    {
+      transfers: Transfer_t[];
+    }
+  > =>
+  async ({ context, loaderReturn }) => {
+    const { transfers } = loaderReturn;
+
+    for (let i = 0; i < transfers.length; i++) {
+      context.Transfer.set({
+        ...transfers[i],
+        transferType,
       });
     }
-  }
+  };
+
+StandardTreasury.GroupMintSingle.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupMintSingle"),
 });
 
-StandardTreasury.GroupMintBatch.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
+StandardTreasury.GroupMintBatch.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupMintBatch"),
 });
 
-StandardTreasury.GroupRedeem.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
+StandardTreasury.GroupRedeem.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupRedeem"),
 });
 
-StandardTreasury.GroupRedeemCollateralBurn.handler(
-  async ({ event, context }) => {
-    // TODO: Implement handler here
-  }
-);
+StandardTreasury.GroupRedeemCollateralBurn.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupRedeemCollateralBurn"),
+});
 
-StandardTreasury.GroupRedeemCollateralReturn.handler(
-  async ({ event, context }) => {
-    // TODO: Implement handler here
-  }
-);
-
-// TODO: missing envent to redeeem from group
+StandardTreasury.GroupRedeemCollateralReturn.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupRedeemCollateralReturn"),
+});

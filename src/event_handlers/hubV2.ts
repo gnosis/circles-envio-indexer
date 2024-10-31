@@ -17,7 +17,7 @@ import { handleTransfer } from "../common/handleTransfer";
 // ###############
 
 ERC20Lift.ERC20WrapperDeployed.contractRegister(async ({ event, context }) => {
-  context.addWrapperERC20Personal(event.params.erc20Wrapper);
+  context.addWrappedERC20(event.params.erc20Wrapper);
 });
 
 ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
@@ -279,14 +279,10 @@ HubV2.StreamCompleted.handlerWithLoader({
     // delete the transfers only
     // it's important to not reverse balances because of how the pathfinder works.
     for (let i = 0; i < transfers.length; i++) {
-      const tx = await context.Transfer.get(transfers[i].id);
-      if (tx) {
-        context.Transfer.set({
-          ...tx,
-          isPartOfStream: true,
-        });
-        // decrese transfer count
-      }
+      context.Transfer.set({
+        ...transfers[i],
+        isPartOfStream: true,
+      });
     }
 
     // register as transfer

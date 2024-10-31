@@ -1,11 +1,11 @@
 import {
     eventLog,
     handlerContext,
-    WrapperERC20Personal,
-    WrapperERC20Personal_DepositInflationary_eventArgs,
-    WrapperERC20Personal_WithdrawInflationary_eventArgs,
-    WrapperERC20Personal_DepositDemurraged_eventArgs,
-    WrapperERC20Personal_WithdrawDemurraged_eventArgs,
+    WrappedERC20,
+    WrappedERC20_DepositInflationary_eventArgs,
+    WrappedERC20_WithdrawInflationary_eventArgs,
+    WrappedERC20_DepositDemurraged_eventArgs,
+    WrappedERC20_WithdrawDemurraged_eventArgs,
   } from "generated";
   import { handleTransfer } from "../common/handleTransfer";
   
@@ -13,7 +13,7 @@ import {
     return `${avatarId}-${tokenId}`;
   }
 
-WrapperERC20Personal.Transfer.handler(
+WrappedERC20.Transfer.handler(
     async ({ event, context }) =>
       await handleTransfer({
         event,
@@ -28,8 +28,8 @@ WrapperERC20Personal.Transfer.handler(
   
   async function updateDemurragedAvatarBalance(
     event: eventLog<
-      | WrapperERC20Personal_DepositDemurraged_eventArgs
-      | WrapperERC20Personal_WithdrawDemurraged_eventArgs
+      | WrappedERC20_DepositDemurraged_eventArgs
+      | WrappedERC20_WithdrawDemurraged_eventArgs
     >,
     context: handlerContext,
     operation: "deposit" | "withdraw"
@@ -51,11 +51,11 @@ WrapperERC20Personal.Transfer.handler(
     }
   }
   
-  WrapperERC20Personal.DepositDemurraged.handler(async ({ event, context }) => {
+  WrappedERC20.DepositDemurraged.handler(async ({ event, context }) => {
     await updateDemurragedAvatarBalance(event, context, "deposit");
   });
   
-  WrapperERC20Personal.WithdrawDemurraged.handler(async ({ event, context }) => {
+  WrappedERC20.WithdrawDemurraged.handler(async ({ event, context }) => {
     await updateDemurragedAvatarBalance(event, context, "withdraw");
   });
   
@@ -66,8 +66,8 @@ WrapperERC20Personal.Transfer.handler(
    */
   async function updateInflationaryAvatarBalance(
     event: eventLog<
-      | WrapperERC20Personal_DepositInflationary_eventArgs
-      | WrapperERC20Personal_WithdrawInflationary_eventArgs
+      | WrappedERC20_DepositInflationary_eventArgs
+      | WrappedERC20_WithdrawInflationary_eventArgs
     >,
     context: handlerContext,
     operation: "deposit" | "withdraw"
@@ -93,11 +93,11 @@ WrapperERC20Personal.Transfer.handler(
     }
   }
   
-  WrapperERC20Personal.DepositInflationary.handler(async ({ event, context }) => {
+  WrappedERC20.DepositInflationary.handler(async ({ event, context }) => {
     await updateInflationaryAvatarBalance(event, context, "deposit");
   });
   
-  WrapperERC20Personal.WithdrawInflationary.handler(
+  WrappedERC20.WithdrawInflationary.handler(
     async ({ event, context }) => {
       await updateInflationaryAvatarBalance(event, context, "withdraw");
     }

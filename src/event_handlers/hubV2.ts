@@ -12,20 +12,13 @@ import {
   HubV2_TransferSingle_eventArgs,
   HubV2_TransferBatch_eventArgs,
   WrapperERC20Personal_Transfer_eventArgs,
-  StandardTreasury,
   NameRegistry,
   SafeAccount,
 } from "generated";
-import {
-  toBytes,
-  bytesToBigInt,
-  zeroAddress,
-  parseEther,
-  Address,
-} from "viem";
+import { toBytes, bytesToBigInt, zeroAddress, parseEther } from "viem";
 import { incrementStats } from "../incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
-import { getProfileMetadataFromIpfs, uint8ArrayToCidV0 } from "../utils";
+import { getProfileMetadataFromIpfs } from "../utils";
 import { Profile } from "../types";
 
 function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
@@ -89,7 +82,6 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       logIndex: event.logIndex,
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
       cidV0: undefined,
-      name: undefined,
       transactionIndex: event.transaction.transactionIndex,
       wrappedTokenId: undefined,
       balance: 0n,
@@ -141,7 +133,6 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     logIndex: event.logIndex,
     tokenId: bytesToBigInt(toBytes(event.params.organization)).toString(),
     cidV0: undefined,
-    name: event.params.name,
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
     balance: 0n,
@@ -153,33 +144,68 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
   };
 
   context.Avatar.set(avatarEntity);
+
+  context.Profile.set({
+    id: event.params.organization,
+    description: "",
+    previewImageUrl: "",
+    imageUrl: "",
+    name: event.params.name,
+    symbol: "",
+  });
   await incrementStats(context, "signups");
 });
 
 HubV2.RegisterGroup.handler(async ({ event, context }) => {
-  const avatarEntity: Avatar = {
+  const avatar = await context.Avatar.get(event.params.group);
+  if (!avatar) {
+    const avatarEntity: Avatar = {
+      id: event.params.group,
+      avatarType: "RegisterGroup",
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionHash: event.transaction.hash,
+      invitedBy: undefined,
+      version: 2,
+      logIndex: event.logIndex,
+      tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
+      cidV0: undefined,
+      transactionIndex: event.transaction.transactionIndex,
+      wrappedTokenId: undefined,
+      balance: 0n,
+      lastMint: undefined,
+      mintEndPeriod: undefined,
+      lastDemurrageUpdate: undefined,
+      trustedByN: 0,
+      profile_id: event.params.group,
+    };
+
+    context.Avatar.set(avatarEntity);
+  } else {
+    context.Avatar.set({
+      ...avatar,
+      avatarType: "RegisterGroup",
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionHash: event.transaction.hash,
+      transactionIndex: event.transaction.transactionIndex,
+    });
+  }
+
+  const profile = (await context.Profile.get(event.params.group)) || {
     id: event.params.group,
-    avatarType: "RegisterGroup",
-    blockNumber: event.block.number,
-    timestamp: event.block.timestamp,
-    transactionHash: event.transaction.hash,
-    invitedBy: undefined,
-    version: 2,
-    logIndex: event.logIndex,
-    tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
-    cidV0: undefined,
-    name: event.params.name,
-    transactionIndex: event.transaction.transactionIndex,
-    wrappedTokenId: undefined,
-    balance: 0n,
-    lastMint: undefined,
-    mintEndPeriod: undefined,
-    lastDemurrageUpdate: undefined,
-    trustedByN: 0,
-    profile_id: event.params.group,
+    name: "name not found",
+    description: "",
+    previewImageUrl: "",
+    imageUrl: "",
   };
 
-  context.Avatar.set(avatarEntity);
+  context.Profile.set({
+    ...profile,
+    name: event.params.name,
+    symbol: event.params.symbol,
+  });
+
   await incrementStats(context, "signups");
 });
 
@@ -194,99 +220,56 @@ HubV2.PersonalMint.handler(async ({ event, context }) => {
   }
 });
 
-StandardTreasury.CreateVault.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
-});
-
-StandardTreasury.GroupMintSingle.handler(async ({ event, context }) => {
-  const avatar = await context.Avatar.get(event.params.group);
-  if (avatar) {
-    const balanceId = makeAvatarBalanceEntityId(
-      event.params.group,
-      event.params.id.toString()
-    );
-    const avatarBalance = await context.AvatarBalance.get(balanceId);
-    if (avatarBalance) {
-      context.AvatarBalance.set({
-        ...avatarBalance,
-        balance: avatarBalance.balance + event.params.value,
-      });
-    } else {
-      context.AvatarBalance.set({
-        id: makeAvatarBalanceEntityId(
-          event.params.group,
-          event.params.id.toString()
-        ),
-        token_id: event.params.id.toString(),
-        avatar_id: event.params.group,
-        balance: event.params.value,
-        inflationaryValue: 0n,
-        isWrapped: false,
-        lastCalculated: 0,
-        version: 2,
-      });
-    }
-  }
-});
-
-StandardTreasury.GroupMintBatch.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
-});
-
-StandardTreasury.GroupRedeem.handler(async ({ event, context }) => {
-  // TODO: Implement handler here
-});
-
-StandardTreasury.GroupRedeemCollateralBurn.handler(
-  async ({ event, context }) => {
-    // TODO: Implement handler here
-  }
-);
-
-StandardTreasury.GroupRedeemCollateralReturn.handler(
-  async ({ event, context }) => {
-    // TODO: Implement handler here
-  }
-);
-
-// TODO: missing envent to redeeem from group
-
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
-  const avatar = await context.Avatar.get(event.params.avatar);
-  if (avatar) {
-    const cidV0Formatted = uint8ArrayToCidV0(
-      Uint8Array.from(
-        Buffer.from(
-          event.params.metadataDigest.slice(
-            2,
-            event.params.metadataDigest.length
-          ),
-          "hex"
-        )
-      )
+  let profileMetadata: { cidV0: string; data: Profile | null } | null = null;
+  try {
+    profileMetadata = await getProfileMetadataFromIpfs(
+      event.params.metadataDigest
     );
+  } catch (_) {}
 
-    let profileMetadata: Profile | null = null;
-    try {
-      profileMetadata = await getProfileMetadataFromIpfs(
-        cidV0Formatted,
-        avatar.id as Address
-      );
-    } catch (_) {}
-
-    context.Profile.set({
-      id: avatar.id,
-      name: profileMetadata?.name || "name not found",
-      description: profileMetadata?.description || "",
-      previewImageUrl: profileMetadata?.previewImageUrl || "",
-      imageUrl: profileMetadata?.imageUrl || "",
+  const avatar = await context.Avatar.get(event.params.avatar);
+  if (!avatar) {
+    // register group emits metadata event update before the register group event
+    context.Avatar.set({
+      id: event.params.avatar,
+      avatarType: "Unknown",
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionHash: event.transaction.hash,
+      invitedBy: undefined,
+      version: 2,
+      logIndex: event.logIndex,
+      tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+      cidV0: profileMetadata?.cidV0,
+      transactionIndex: event.transaction.transactionIndex,
+      wrappedTokenId: undefined,
+      balance: 0n,
+      lastMint: undefined,
+      mintEndPeriod: undefined,
+      lastDemurrageUpdate: undefined,
+      trustedByN: 0,
+      profile_id: event.params.avatar,
     });
-
+  } else {
     context.Avatar.set({
       ...avatar,
-      cidV0: cidV0Formatted,
+      cidV0: profileMetadata?.cidV0,
     });
   }
+
+  const currentProfile = (await context.Profile.get(event.params.avatar)) || {
+    id: event.params.avatar,
+    name: "name not found",
+    symbol: "",
+    description: "",
+    previewImageUrl: "",
+    imageUrl: "",
+  };
+  context.Profile.set({
+    ...currentProfile,
+    ...profileMetadata?.data,
+  });
 });
 
 // ###############
@@ -608,7 +591,6 @@ HubV2.Trust.handler(async ({ event, context }) => {
       logIndex: event.logIndex,
       tokenId: undefined,
       cidV0: undefined,
-      name: undefined,
       transactionIndex: event.transaction.transactionIndex,
       wrappedTokenId: undefined,
       balance: 0n,

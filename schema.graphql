@@ -64,6 +64,7 @@ enum AvatarType {
   Invite
   RegisterGroup
   RegisterOrganization
+  Unknown
 }
 
 type AvatarBalance {
@@ -94,8 +95,6 @@ type Avatar {
   tokenId: String
   # v2 wrapped token id
   wrappedTokenId: String
-  # groups only
-  name: String
   # IPFS CID of the avatar's profile
   cidV0: String
   # balances of all tokens
@@ -113,6 +112,8 @@ type Profile {
   id: ID!
   name: String!
   description: String
+  # groups only
+  symbol: String
   previewImageUrl: String
   imageUrl: String
 }

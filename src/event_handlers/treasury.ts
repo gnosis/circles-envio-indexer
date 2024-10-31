@@ -1,4 +1,5 @@
 import {
+  CustomTreasury,
   HandlerTypes_handler,
   HandlerTypes_loader,
   StandardTreasury,
@@ -56,6 +57,10 @@ const createHandler =
     }
   };
 
+// #########################
+// ### STANDARD TREASURY ###
+// #########################
+
 StandardTreasury.GroupMintSingle.handlerWithLoader({
   loader,
   handler: createHandler("GroupMintSingle"),
@@ -77,6 +82,35 @@ StandardTreasury.GroupRedeemCollateralBurn.handlerWithLoader({
 });
 
 StandardTreasury.GroupRedeemCollateralReturn.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupRedeemCollateralReturn"),
+});
+
+// #########################
+// #### CUSTOM TREASURY ####
+// #########################
+
+CustomTreasury.GroupMintSingle.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupMintSingle"),
+});
+
+CustomTreasury.GroupMintBatch.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupMintBatch"),
+});
+
+CustomTreasury.GroupRedeem.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupRedeem"),
+});
+
+CustomTreasury.GroupRedeemCollateralBurn.handlerWithLoader({
+  loader,
+  handler: createHandler("GroupRedeemCollateralBurn"),
+});
+
+CustomTreasury.GroupRedeemCollateralReturn.handlerWithLoader({
   loader,
   handler: createHandler("GroupRedeemCollateralReturn"),
 });

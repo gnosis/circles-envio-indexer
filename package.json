@@ -22,7 +22,7 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "envio": "2.4.3",
+    "envio": "2.7.0",
     "viem": "2.21.0",
     "multihashes": "^4.0.3",
     "sqlite3": "^5.1.7"

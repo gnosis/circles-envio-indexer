@@ -36,7 +36,7 @@ contracts:
   - event: ProxyCreation(address proxy, address masterCopy)
   - event: ERC20WrapperDeployed(address indexed avatar, address indexed erc20Wrapper, uint8 circlesType)
 - name: StandardTreasury
-  handler: src/event_handlers/hubV2.ts
+  handler: src/event_handlers/standardTreasury.ts
   events:
   - event: CreateVault(address indexed group, address indexed vault)
   - event: GroupMintSingle(address indexed group, uint256 indexed id, uint256 value, bytes userData)

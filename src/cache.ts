@@ -6,7 +6,7 @@ const db = new sqlite3.Database(".cache/cache.db");
 
 export class ProfileCache {
   static async init() {
-    const cache = new ProfileCache("cache");
+    const cache = new ProfileCache("cache_v2");
     await cache.createTableIfNotExists();
     return cache;
   }
@@ -21,6 +21,7 @@ export class ProfileCache {
     const query = `
       CREATE TABLE IF NOT EXISTS ${this.key} (
         id TEXT PRIMARY KEY,
+        cidV0 TEXT,
         data TEXT
       )
     `;
@@ -36,26 +37,28 @@ export class ProfileCache {
     });
   }
 
-  public read(id: string): Promise<Metadata | null> {
+  public read(id: string): Promise<{ cidV0: string; data: Metadata } | null> {
     return new Promise((resolve, reject) => {
-      const query = `SELECT data FROM ${this.key} WHERE id = ?`;
+      const query = `SELECT data, cidV0 FROM ${this.key} WHERE id = ?`;
       db.get(query, [id], (err, row: any) => {
         if (err) {
           console.error("Error executing query:", err);
           reject(err);
         } else {
-          resolve(row ? JSON.parse(row.data) : null);
+          resolve(
+            row ? { cidV0: row.cidV0, data: JSON.parse(row.data) } : null
+          );
         }
       });
     });
   }
 
-  public async add(id: string, metadata: Metadata) {
-    const query = `INSERT INTO ${this.key} (id, data) VALUES (?, ?)`;
+  public async add(id: string, cidV0: string, metadata: Metadata) {
+    const query = `INSERT INTO ${this.key} (id, cidV0, data) VALUES (?, ?, ?)`;
     const data = JSON.stringify(metadata);
 
     return new Promise<void>((resolve, reject) => {
-      db.run(query, [id, data], (err) => {
+      db.run(query, [id, cidV0, data], (err) => {
         if (err) {
           console.error("Error executing query:", err);
           reject(err);

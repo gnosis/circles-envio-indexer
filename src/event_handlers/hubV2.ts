@@ -1,8 +1,8 @@
 import {
   eventLog,
   handlerContext,
-  Hub_HubTransfer_eventArgs,
-  PersonalCRC_Transfer_eventArgs,
+  /*  Hub_HubTransfer_eventArgs,
+  PersonalCRC_Transfer_eventArgs, */
   ERC20Lift,
   HubV2,
   WrapperERC20Personal,
@@ -334,8 +334,8 @@ const handleTransfer = async ({
   version,
 }: {
   event: eventLog<
-    | Hub_HubTransfer_eventArgs
-    | PersonalCRC_Transfer_eventArgs
+    /*     | Hub_HubTransfer_eventArgs
+    | PersonalCRC_Transfer_eventArgs */
     | HubV2_TransferSingle_eventArgs
     | HubV2_TransferBatch_eventArgs
     | WrapperERC20Personal_Transfer_eventArgs

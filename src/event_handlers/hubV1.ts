@@ -1,4 +1,5 @@
-import { Hub, PersonalCRC, Avatar, TrustRelation, Token } from "generated";
+export const uncommentThisWhenReady = "uncomment soon TM";
+/* import { Hub, PersonalCRC, Avatar, TrustRelation, Token } from "generated";
 import { maxUint256 } from "viem";
 import { incrementStats } from "../incrementStats";
 import { handleTransfer } from "../common/handleTransfer";
@@ -174,3 +175,4 @@ Hub.Trust.handler(async ({ event, context }) => {
   context.TrustRelation.set(entity);
   await incrementStats(context, "trusts");
 });
+ */

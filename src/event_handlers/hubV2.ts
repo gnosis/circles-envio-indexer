@@ -15,7 +15,13 @@ import {
   NameRegistry,
   SafeAccount,
 } from "generated";
-import { toBytes, bytesToBigInt, zeroAddress, parseEther } from "viem";
+import {
+  toBytes,
+  bytesToBigInt,
+  zeroAddress,
+  parseEther,
+  getAddress,
+} from "viem";
 import { incrementStats } from "../incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
 import { getProfileMetadataFromIpfs } from "../utils";
@@ -158,6 +164,7 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
 
 HubV2.RegisterGroup.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.group);
+
   if (!avatar) {
     const avatarEntity: Avatar = {
       id: event.params.group,
@@ -229,6 +236,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
   } catch (_) {}
 
   const avatar = await context.Avatar.get(event.params.avatar);
+
   if (!avatar) {
     // register group emits metadata event update before the register group event
     context.Avatar.set({
@@ -579,6 +587,7 @@ HubV2.Trust.handler(async ({ event, context }) => {
 
   // invite
   const avatarTrustee = await context.Avatar.get(event.params.trustee);
+
   if (!avatarTrustee) {
     context.Avatar.set({
       id: event.params.trustee,
@@ -603,6 +612,7 @@ HubV2.Trust.handler(async ({ event, context }) => {
   } else {
     context.Avatar.set({
       ...avatarTrustee,
+      invitedBy: event.params.truster,
       trustedByN: isUntrust
         ? avatarTrustee.trustedByN - 1
         : avatarTrustee.trustedByN + 1,

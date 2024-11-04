@@ -76,6 +76,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       mintEndPeriod: undefined,
       lastDemurrageUpdate: undefined,
       trustedByN: 0,
+      isVerified: false,
       profile_id: event.params.avatar,
     };
 
@@ -127,6 +128,7 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     mintEndPeriod: undefined,
     lastDemurrageUpdate: undefined,
     trustedByN: 0,
+    isVerified: false,
     profile_id: event.params.organization,
   };
 
@@ -165,6 +167,7 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
       mintEndPeriod: undefined,
       lastDemurrageUpdate: undefined,
       trustedByN: 0,
+      isVerified: false,
       profile_id: event.params.group,
     };
 
@@ -238,6 +241,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       mintEndPeriod: undefined,
       lastDemurrageUpdate: undefined,
       trustedByN: 0,
+      isVerified: false,
       profile_id: event.params.avatar,
     });
   } else {
@@ -383,15 +387,18 @@ HubV2.Trust.handler(async ({ event, context }) => {
       mintEndPeriod: undefined,
       lastDemurrageUpdate: undefined,
       trustedByN: 1,
+      isVerified: false,
       profile_id: event.params.trustee,
     });
   } else {
+    const newTurdtedByN = isUntrust
+      ? avatarTrustee.trustedByN - 1
+      : avatarTrustee.trustedByN + 1;
     context.Avatar.set({
       ...avatarTrustee,
       invitedBy: event.params.truster,
-      trustedByN: isUntrust
-        ? avatarTrustee.trustedByN - 1
-        : avatarTrustee.trustedByN + 1,
+      trustedByN: newTurdtedByN,
+      isVerified: newTurdtedByN >= 3,
     });
   }
 

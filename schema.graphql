@@ -108,6 +108,7 @@ type Avatar {
   mintEndPeriod: Int
   lastDemurrageUpdate: Int
   trustedByN: Int!
+  isVerified: Boolean!
   profile: Profile
 }
 

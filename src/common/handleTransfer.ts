@@ -35,8 +35,6 @@ export const handleTransfer = async ({
   transferType: TransferType_t;
   version: number;
 }) => {
-  let isWrapped = transferType === "Erc20WrapperTransfer";
-
   for (let i = 0; i < tokens.length; i++) {
     const token = await context.Token.get(tokens[i]);
     if (!token) {
@@ -51,7 +49,7 @@ export const handleTransfer = async ({
         // TODO: fix
         tokenType: "RegisterHuman",
         // TODO: fix
-        tokenOwner: event.params.to,
+        tokenOwner_id: event.params.to,
       });
     }
 
@@ -74,24 +72,14 @@ export const handleTransfer = async ({
     };
     context.Transfer.set(transferEntity);
 
-    await updateAvatarBalance(
-      context,
-      values[i],
-      event.block.timestamp,
-      {
-        id: event.params.to,
-        token_id: tokens[i],
-      }
-    );
-    await updateAvatarBalance(
-      context,
-      -values[i],
-      event.block.timestamp,
-      {
-        id: event.params.from,
-        token_id: tokens[i],
-      },
-    );
+    await updateAvatarBalance(context, values[i], event.block.timestamp, {
+      id: event.params.to,
+      token_id: tokens[i],
+    });
+    await updateAvatarBalance(context, -values[i], event.block.timestamp, {
+      id: event.params.from,
+      token_id: tokens[i],
+    });
     await incrementStats(context, "transfers");
   }
 };

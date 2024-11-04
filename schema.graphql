@@ -140,5 +140,5 @@ type Token {
   transactionHash: String!
   version: Int!
   tokenType: TokenType!
-  tokenOwner: String!
+  tokenOwner: Avatar!
 }

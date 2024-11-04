@@ -40,7 +40,7 @@ ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
       event.params.circlesType === 0n
         ? "WrappedDemurrageToken"
         : "WrappedStaticToken",
-    tokenOwner: event.params.avatar,
+    tokenOwner_id: event.params.avatar,
   });
 });
 

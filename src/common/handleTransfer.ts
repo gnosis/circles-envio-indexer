@@ -6,7 +6,7 @@ import {
   Transfer,
   HubV2_TransferSingle_eventArgs,
   HubV2_TransferBatch_eventArgs,
-  WrapperERC20Personal_Transfer_eventArgs,
+  WrappedERC20_Transfer_eventArgs,
 } from "generated";
 import { incrementStats } from "../incrementStats";
 import { TransferType_t } from "generated/src/db/Enums.gen";
@@ -26,7 +26,7 @@ export const handleTransfer = async ({
     | PersonalCRC_Transfer_eventArgs */
     | HubV2_TransferSingle_eventArgs
     | HubV2_TransferBatch_eventArgs
-    | WrapperERC20Personal_Transfer_eventArgs
+    | WrappedERC20_Transfer_eventArgs
   >;
   context: handlerContext;
   operator: string | undefined;
@@ -76,23 +76,21 @@ export const handleTransfer = async ({
 
     await updateAvatarBalance(
       context,
-      event.params.to,
-      tokens[i],
       values[i],
-      version,
-      isWrapped,
-      undefined,
-      undefined
+      event.block.timestamp,
+      {
+        id: event.params.to,
+        token_id: tokens[i],
+      }
     );
     await updateAvatarBalance(
       context,
-      event.params.from,
-      tokens[i],
       -values[i],
-      version,
-      isWrapped,
-      undefined,
-      undefined
+      event.block.timestamp,
+      {
+        id: event.params.from,
+        token_id: tokens[i],
+      },
     );
     await incrementStats(context, "transfers");
   }

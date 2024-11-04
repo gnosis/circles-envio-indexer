@@ -1,42 +1,23 @@
 import {
-  eventLog,
-  handlerContext,
-  /*  Hub_HubTransfer_eventArgs,
-  PersonalCRC_Transfer_eventArgs, */
   ERC20Lift,
   HubV2,
-  WrapperERC20Personal,
   Avatar,
   TrustRelation,
-  Transfer,
-  HubV2_TransferSingle_eventArgs,
-  HubV2_TransferBatch_eventArgs,
-  WrapperERC20Personal_Transfer_eventArgs,
   NameRegistry,
   SafeAccount,
 } from "generated";
-import {
-  toBytes,
-  bytesToBigInt,
-  zeroAddress,
-  parseEther,
-  getAddress,
-} from "viem";
+import { toBytes, bytesToBigInt, parseEther } from "viem";
 import { incrementStats } from "../incrementStats";
-import { TransferType_t } from "generated/src/db/Enums.gen";
 import { getProfileMetadataFromIpfs } from "../utils";
 import { Profile } from "../types";
-
-function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
-  return `${avatarId}-${tokenId}`;
-}
+import { handleTransfer } from "../common/handleTransfer";
 
 // ###############
 // #### TOKEN ####
 // ###############
 
 ERC20Lift.ERC20WrapperDeployed.contractRegister(async ({ event, context }) => {
-  context.addWrapperERC20Personal(event.params.erc20Wrapper);
+  context.addWrappedERC20(event.params.erc20Wrapper);
 });
 
 ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
@@ -284,140 +265,6 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
 // ## TRANSFERS ##
 // ###############
 
-const updateAvatarBalance = async (
-  context: handlerContext,
-  avatarId: string,
-  tokenId: string,
-  amount: bigint,
-  version: number,
-  isWrapped: boolean,
-  inflationaryValue: bigint | undefined,
-  lastCalculated: number | undefined
-) => {
-  if (avatarId === zeroAddress) {
-    return;
-  }
-  const balanceId = makeAvatarBalanceEntityId(avatarId, tokenId);
-  const [avatarBalance, avatar] = await Promise.all([
-    context.AvatarBalance.get(balanceId),
-    context.Avatar.get(avatarId),
-  ]);
-  if (avatarBalance) {
-    let updated = {
-      ...avatarBalance,
-      balance: avatarBalance.balance + amount,
-    };
-    if (inflationaryValue !== undefined) {
-      updated.inflationaryValue =
-        (avatarBalance.inflationaryValue || 0n) + inflationaryValue;
-    }
-    context.AvatarBalance.set(updated);
-  } else {
-    context.AvatarBalance.set({
-      id: balanceId,
-      avatar_id: avatarId,
-      token_id: tokenId,
-      balance: amount,
-      version,
-      isWrapped,
-      inflationaryValue,
-      lastCalculated,
-    });
-  }
-  if (avatar) {
-    context.Avatar.set({
-      ...avatar,
-      balance: avatar.balance + amount,
-    });
-  }
-};
-
-const handleTransfer = async ({
-  event,
-  context,
-  operator,
-  values,
-  tokens,
-  transferType,
-  version,
-}: {
-  event: eventLog<
-    /*     | Hub_HubTransfer_eventArgs
-    | PersonalCRC_Transfer_eventArgs */
-    | HubV2_TransferSingle_eventArgs
-    | HubV2_TransferBatch_eventArgs
-    | WrapperERC20Personal_Transfer_eventArgs
-  >;
-  context: handlerContext;
-  operator: string | undefined;
-  values: bigint[];
-  tokens: string[];
-  transferType: TransferType_t;
-  version: number;
-}) => {
-  let isWrapped = transferType === "Erc20WrapperTransfer";
-
-  for (let i = 0; i < tokens.length; i++) {
-    const token = await context.Token.get(tokens[i]);
-    if (!token) {
-      context.Token.set({
-        id: tokens[i],
-        blockNumber: event.block.number,
-        timestamp: event.block.timestamp,
-        transactionIndex: event.transaction.transactionIndex,
-        logIndex: event.logIndex,
-        transactionHash: event.transaction.hash,
-        version,
-        // TODO: fix
-        tokenType: "RegisterHuman",
-        // TODO: fix
-        tokenOwner: event.params.to,
-      });
-    }
-
-    const transferEntity: Transfer = {
-      id: `${event.transaction.hash}-${event.logIndex}`,
-      safeTxHash: undefined,
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionIndex: event.transaction.transactionIndex,
-      transactionHash: event.transaction.hash,
-      logIndex: event.logIndex,
-      from: event.params.from,
-      to: event.params.to,
-      operator,
-      value: values[i],
-      token: tokens[i],
-      transferType,
-      version,
-      isPartOfStream: false,
-    };
-    context.Transfer.set(transferEntity);
-
-    await updateAvatarBalance(
-      context,
-      event.params.to,
-      tokens[i],
-      values[i],
-      version,
-      isWrapped,
-      undefined,
-      undefined
-    );
-    await updateAvatarBalance(
-      context,
-      event.params.from,
-      tokens[i],
-      -values[i],
-      version,
-      isWrapped,
-      undefined,
-      undefined
-    );
-    await incrementStats(context, "transfers");
-  }
-};
-
 HubV2.StreamCompleted.handlerWithLoader({
   loader: async ({ event, context }) => {
     let transfers = await context.Transfer.getWhere.transactionHash.eq(
@@ -432,14 +279,10 @@ HubV2.StreamCompleted.handlerWithLoader({
     // delete the transfers only
     // it's important to not reverse balances because of how the pathfinder works.
     for (let i = 0; i < transfers.length; i++) {
-      const tx = await context.Transfer.get(transfers[i].id);
-      if (tx) {
-        context.Transfer.set({
-          ...tx,
-          isPartOfStream: true,
-        });
-        // decrese transfer count
-      }
+      context.Transfer.set({
+        ...transfers[i],
+        isPartOfStream: true,
+      });
     }
 
     // register as transfer
@@ -500,73 +343,6 @@ HubV2.DiscountCost.handler(async ({ event, context }) => {
     });
   }
 });
-
-WrapperERC20Personal.Transfer.handler(
-  async ({ event, context }) =>
-    await handleTransfer({
-      event,
-      context,
-      operator: undefined,
-      values: [event.params.value],
-      tokens: [event.srcAddress],
-      transferType: "Erc20WrapperTransfer",
-      version: 2,
-    })
-);
-
-WrapperERC20Personal.DepositDemurraged.handler(async ({ event, context }) => {
-  await updateAvatarBalance(
-    context,
-    event.params.account,
-    event.srcAddress,
-    0n,
-    2,
-    true,
-    event.params.inflationaryAmount,
-    event.block.timestamp
-  );
-});
-
-WrapperERC20Personal.WithdrawDemurraged.handler(async ({ event, context }) => {
-  await updateAvatarBalance(
-    context,
-    event.params.account,
-    event.srcAddress,
-    0n,
-    2,
-    true,
-    -event.params.inflationaryAmount,
-    event.block.timestamp
-  );
-});
-
-WrapperERC20Personal.DepositInflationary.handler(async ({ event, context }) => {
-  await updateAvatarBalance(
-    context,
-    event.params.account,
-    event.srcAddress,
-    0n,
-    2,
-    true,
-    event.params.demurragedAmount,
-    event.block.timestamp
-  );
-});
-
-WrapperERC20Personal.WithdrawInflationary.handler(
-  async ({ event, context }) => {
-    await updateAvatarBalance(
-      context,
-      event.params.account,
-      event.srcAddress,
-      0n,
-      2,
-      true,
-      -event.params.demurragedAmount,
-      event.block.timestamp
-    );
-  }
-);
 
 // ###############
 // #### TRUST ####

@@ -1,5 +1,4 @@
-export const uncommentThisWhenReady = "uncomment soon TM";
-/* import { Hub, PersonalCRC, Avatar, TrustRelation, Token } from "generated";
+import { Hub, PersonalCRC, Avatar, TrustRelation, Token } from "generated";
 import { maxUint256 } from "viem";
 import { incrementStats } from "../incrementStats";
 import { handleTransfer } from "../common/handleTransfer";
@@ -39,6 +38,7 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
     mintEndPeriod: undefined,
     lastDemurrageUpdate: undefined,
     trustedByN: 0,
+    isVerified: false,
     profile_id: event.params.organization,
   };
 
@@ -71,6 +71,7 @@ Hub.Signup.handler(async ({ event, context }) => {
     mintEndPeriod: undefined,
     lastDemurrageUpdate: undefined,
     trustedByN: 0,
+    isVerified: false,
     profile_id: event.params.user,
   };
 
@@ -85,7 +86,7 @@ Hub.Signup.handler(async ({ event, context }) => {
     transactionHash: event.transaction.hash,
     version: 1,
     tokenType: "Signup",
-    tokenOwner: event.params.user,
+    tokenOwner_id: event.params.user,
   };
 
   context.Token.set(tokenEntity);
@@ -175,4 +176,3 @@ Hub.Trust.handler(async ({ event, context }) => {
   context.TrustRelation.set(entity);
   await incrementStats(context, "trusts");
 });
- */

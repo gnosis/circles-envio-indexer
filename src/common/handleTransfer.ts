@@ -9,8 +9,25 @@ import {
   WrappedERC20_Transfer_eventArgs,
 } from "generated";
 import { incrementStats } from "../incrementStats";
-import { TransferType_t } from "generated/src/db/Enums.gen";
+import {
+  AvatarType_t,
+  TokenType_t,
+  TransferType_t,
+} from "generated/src/db/Enums.gen";
 import { updateAvatarBalance } from "./updateAvatarBalance";
+import { getAddress, toHex } from "viem";
+
+const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
+  switch (avatarType) {
+    case "Signup":
+    case "OrganizationSignup":
+      return "Signup";
+    case "RegisterGroup":
+      return "RegisterGroup";
+    default:
+      return "RegisterHuman";
+  }
+};
 
 export const handleTransfer = async ({
   event,
@@ -19,6 +36,7 @@ export const handleTransfer = async ({
   values,
   tokens,
   transferType,
+  avatarType,
   version,
 }: {
   event: eventLog<
@@ -33,11 +51,20 @@ export const handleTransfer = async ({
   values: bigint[];
   tokens: string[];
   transferType: TransferType_t;
+  avatarType: AvatarType_t;
   version: number;
 }) => {
   for (let i = 0; i < tokens.length; i++) {
     const token = await context.Token.get(tokens[i]);
     if (!token) {
+      let tokenOwner_id: string;
+      try {
+        tokenOwner_id = tokens[i].startsWith("0x")
+          ? event.params.to
+          : getAddress(toHex(BigInt(tokens[i])));
+      } catch (_) {
+        tokenOwner_id = event.params.to;
+      }
       context.Token.set({
         id: tokens[i],
         blockNumber: event.block.number,
@@ -46,10 +73,8 @@ export const handleTransfer = async ({
         logIndex: event.logIndex,
         transactionHash: event.transaction.hash,
         version,
-        // TODO: fix
-        tokenType: "RegisterHuman",
-        // TODO: fix
-        tokenOwner_id: event.params.to,
+        tokenType: mapAvatarTypeToTokenType(avatarType),
+        tokenOwner_id,
       });
     }
 

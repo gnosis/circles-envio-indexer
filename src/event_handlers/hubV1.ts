@@ -107,6 +107,7 @@ PersonalCRC.Transfer.handler(
       values: [event.params.amount],
       tokens: [event.srcAddress],
       transferType: "Transfer",
+      avatarType: "Signup",
       version: 1,
     })
 );
@@ -120,6 +121,7 @@ Hub.HubTransfer.handler(
       values: [event.params.amount],
       tokens: [event.srcAddress],
       transferType: "HubTransfer",
+      avatarType: "Unknown",
       version: 1,
     })
 );
@@ -131,20 +133,20 @@ Hub.HubTransfer.handler(
 Hub.Trust.handler(async ({ event, context }) => {
   const trustId = `${event.params.user}${event.params.canSendTo}`;
   const oppositeTrustId = `${event.params.canSendTo}${event.params.user}`;
+  const trustRelation = await context.TrustRelation.get(trustId);
   const oppositeTrustRelation = await context.TrustRelation.get(
     oppositeTrustId
   );
   if (event.params.limit === 0n) {
     // this is untrust
-    const trustRelation = await context.TrustRelation.get(trustId);
-    if (trustRelation) {
+    if (trustRelation && trustRelation.version === 1) {
       context.TrustRelation.set({
         ...trustRelation,
         expiryTime: 0n,
         limit: 0n,
       });
     }
-    if (oppositeTrustRelation) {
+    if (oppositeTrustRelation && oppositeTrustRelation.version === 1) {
       context.TrustRelation.set({
         ...oppositeTrustRelation,
         isMutual: false,
@@ -153,26 +155,28 @@ Hub.Trust.handler(async ({ event, context }) => {
     return;
   }
   const isMutual = oppositeTrustRelation !== undefined;
-  if (isMutual) {
+  if (isMutual && oppositeTrustRelation.version === 1) {
     context.TrustRelation.set({
       ...oppositeTrustRelation,
       isMutual: true,
     });
   }
-  const entity: TrustRelation = {
-    id: trustId,
-    blockNumber: event.block.number,
-    timestamp: event.block.timestamp,
-    transactionIndex: event.transaction.transactionIndex,
-    logIndex: event.logIndex,
-    version: 1,
-    trustee_id: event.params.canSendTo,
-    truster_id: event.params.user,
-    expiryTime: maxUint256,
-    limit: event.params.limit,
-    isMutual,
-  };
+  if (!trustRelation) {
+    const entity: TrustRelation = {
+      id: trustId,
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionIndex: event.transaction.transactionIndex,
+      logIndex: event.logIndex,
+      version: 1,
+      trustee_id: event.params.canSendTo,
+      truster_id: event.params.user,
+      expiryTime: maxUint256,
+      limit: event.params.limit,
+      isMutual,
+    };
 
-  context.TrustRelation.set(entity);
-  await incrementStats(context, "trusts");
+    context.TrustRelation.set(entity);
+    await incrementStats(context, "trusts");
+  }
 });

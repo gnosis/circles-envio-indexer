@@ -13,8 +13,14 @@ import {
     return `${avatarId}-${tokenId}`;
   }
 
-WrappedERC20.Transfer.handler(
-    async ({ event, context }) =>
+WrappedERC20.Transfer.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    let avatar = await context.Avatar.get(event.params.to);
+
+    return { avatar };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { avatar } = loaderReturn;
       await handleTransfer({
         event,
         context,
@@ -22,9 +28,11 @@ WrappedERC20.Transfer.handler(
         values: [event.params.value],
         tokens: [event.srcAddress],
         transferType: "Erc20WrapperTransfer",
+        avatarType: avatar?.avatarType ?? "Unknown",
         version: 2,
       })
-  );
+    }
+ });
   
   async function updateDemurragedAvatarBalance(
     event: eventLog<

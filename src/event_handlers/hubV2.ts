@@ -56,6 +56,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       avatarType: "RegisterHuman",
       version: 2,
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+      trustedByN: 0,
     });
   } else {
     const avatarEntity: Avatar = {
@@ -312,8 +313,14 @@ HubV2.StreamCompleted.handlerWithLoader({
   },
 });
 
-HubV2.TransferSingle.handler(
-  async ({ event, context }) =>
+HubV2.TransferSingle.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    let avatar = await context.Avatar.get(event.params.to);
+
+    return { avatar };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { avatar } = loaderReturn;
     await handleTransfer({
       event,
       context,
@@ -321,9 +328,11 @@ HubV2.TransferSingle.handler(
       values: [event.params.value],
       tokens: [event.params.id.toString()],
       transferType: "TransferSingle",
+      avatarType: avatar?.avatarType ?? "Unknown",
       version: 2,
-    })
-);
+    });
+  },
+});
 
 HubV2.TransferBatch.handler(
   async ({ event, context }) =>
@@ -334,6 +343,7 @@ HubV2.TransferBatch.handler(
       values: event.params.values,
       tokens: event.params.ids.map((id) => id.toString()),
       transferType: "TransferSingle",
+      avatarType: "Unknown",
       version: 2,
     })
 );

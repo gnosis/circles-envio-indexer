@@ -6,7 +6,7 @@ import {
   NameRegistry,
   SafeAccount,
 } from "generated";
-import { toBytes, bytesToBigInt, parseEther } from "viem";
+import { toBytes, bytesToBigInt, parseEther, getAddress } from "viem";
 import { incrementStats } from "../incrementStats";
 import { getProfileMetadataFromIpfs } from "../utils";
 import { Profile } from "../types";
@@ -218,9 +218,18 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
     );
-  } catch (_) {}
+  } catch (_) {
+    console.log("error in getProfileMetadataFromIpfs", _);
+  }
 
   const avatar = await context.Avatar.get(event.params.avatar);
+
+  if (
+    event.params.avatar ===
+    getAddress("0xBe850d5485Ef0F54f4b23e680c0dc371F601a0bE")
+  ) {
+    console.log(event.params, "event params in pending inv");
+  }
 
   if (!avatar) {
     // register group emits metadata event update before the register group event

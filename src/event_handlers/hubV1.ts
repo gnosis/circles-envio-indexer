@@ -131,8 +131,10 @@ Hub.HubTransfer.handler(
 // ###############
 
 Hub.Trust.handler(async ({ event, context }) => {
-  const trustId = `${event.params.user}${event.params.canSendTo}`;
-  const oppositeTrustId = `${event.params.canSendTo}${event.params.user}`;
+  const trustId =
+    `${event.params.user}${event.params.canSendTo}1`.toLowerCase();
+  const oppositeTrustId =
+    `${event.params.canSendTo}${event.params.user}1`.toLowerCase();
   const trustRelation = await context.TrustRelation.get(trustId);
   const oppositeTrustRelation = await context.TrustRelation.get(
     oppositeTrustId

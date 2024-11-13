@@ -375,8 +375,10 @@ HubV2.Trust.handler(async ({ event, context }) => {
   if (event.params.trustee === event.params.truster) {
     return;
   }
-  const trustId = `${event.params.truster}${event.params.trustee}`;
-  const oppositeTrustId = `${event.params.trustee}${event.params.truster}`;
+  const trustId =
+    `${event.params.truster}${event.params.trustee}2`.toLowerCase();
+  const oppositeTrustId =
+    `${event.params.trustee}${event.params.truster}2`.toLowerCase();
   const oppositeTrustRelation = await context.TrustRelation.get(
     oppositeTrustId
   );
@@ -424,14 +426,16 @@ HubV2.Trust.handler(async ({ event, context }) => {
   if (isUntrust) {
     // this is untrust
     const trustRelation = await context.TrustRelation.get(trustId);
-    if (trustRelation) {
+    if (trustRelation && oppositeTrustRelation) {
       context.TrustRelation.set({
         ...trustRelation,
         expiryTime: 0n,
         limit: 0n,
+        blockNumber: event.block.number,
+        timestamp: event.block.timestamp,
+        logIndex: event.logIndex,
+        isMutual: false,
       });
-    }
-    if (oppositeTrustRelation) {
       context.TrustRelation.set({
         ...oppositeTrustRelation,
         isMutual: false,

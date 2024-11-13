@@ -21,7 +21,6 @@ A unified view of all transfer transactions within the system, consolidating bot
 
 ### TrustRelation
 Provides a unified view of active trust relationships, consolidating data from both v1 and v2. A v2 trust won't replace a v1 trust.
-Trust relations from a group to an avatar represent membership of a group (following the rules on the smart contracts).
 
 - **Key Fields:**
   - `blockNumber`
@@ -34,6 +33,23 @@ Trust relations from a group to an avatar represent membership of a group (follo
   - `truster`
   - `expiryTime` (v2 only or set to UInt256.MAX in v1)
   - `limit` (v1 only or set to `100` in v2)
+
+
+Trust relations from a group to an avatar represent membership of a group (following the rules on the smart contracts).
+
+Example:
+```graphql
+query getGroupMembership($groupAddress: String) {
+  TrustRelation(where: {truster_id: {_eq: $groupAddress}, limit: {_gt: 0}}) {
+    expiryTime
+    trustee {
+      profile {
+        name
+      }
+    }
+  }
+}
+```
 
 
 ### Avatar

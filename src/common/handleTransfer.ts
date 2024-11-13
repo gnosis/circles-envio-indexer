@@ -61,7 +61,7 @@ export const handleTransfer = async ({
       try {
         tokenOwner_id = tokens[i].startsWith("0x")
           ? event.params.to
-          : getAddress(toHex(BigInt(tokens[i])));
+          : getAddress(`0x${BigInt(tokens[i]).toString(16).padStart(40, '0')}`);
       } catch (_) {
         tokenOwner_id = event.params.to;
       }

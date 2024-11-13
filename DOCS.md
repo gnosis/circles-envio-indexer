@@ -1,3 +1,81 @@
+## Entities
+
+### Transfer
+A unified view of all transfer transactions within the system, consolidating both v1 and v2 transfers. This entity covers all major transfer events (e.g., `Erc20WrapperTransfer`, `TransferSingle`, `HubTransfer`).
+
+- **Key Fields:**
+  - `blockNumber`
+  - `timestamp`
+  - `transactionIndex`
+  - `logIndex`
+  - `batchIndex`
+  - `transactionHash`
+  - `version`
+  - `operator` (v2 only)
+  - `from`, `to`
+  - `id`
+  - `value`
+  - `type` (transaction type; e.g., `Erc20WrapperTransfer`, `TransferSingle`, etc.)
+  - `tokenType` (e.g., `RegisterGroup`, `RegisterHuman`, etc.)
+
+
+### TrustRelation
+Provides a unified view of active trust relationships, consolidating data from both v1 and v2. A v2 trust won't replace a v1 trust.
+Trust relations from a group to an avatar represent membership of a group (following the rules on the smart contracts).
+
+- **Key Fields:**
+  - `blockNumber`
+  - `timestamp`
+  - `transactionIndex`
+  - `logIndex`
+  - `transactionHash`
+  - `version`
+  - `trustee`
+  - `truster`
+  - `expiryTime` (v2 only or set to UInt256.MAX in v1)
+  - `limit` (v1 only or set to `100` in v2)
+
+
+### Avatar
+A unified view of all humans, groups, and organizations within the system, supporting both v1 and v2 avatars.
+
+- **Key Fields:**
+  - `blockNumber`
+  - `timestamp`
+  - `transactionIndex`
+  - `logIndex`
+  - `transactionHash`
+  - `version`
+  - `type` (e.g., `RegisterGroup`, `RegisterOrganization`, etc.)
+  - `invitedBy`
+  - `avatar`
+  - `tokenId`
+  - `name` (for groups only)
+  - `cidV0Digest` (profile IPFS CID)
+
+
+### AvatarBalance
+This entity tracks token balances for each avatar.
+
+
+### Profile
+The Profile entity contains descriptive metadata (from IPFS) for avatars, including names, images, and symbols for groups.
+
+
+### Token
+A unified view of tokens in the system, capturing both v1 and v2 token data.
+
+- **Key Fields:**
+  - `blockNumber`
+  - `timestamp`
+  - `transactionIndex`
+  - `logIndex`
+  - `transactionHash`
+  - `version`
+  - `type` (e.g., `RegisterGroup`, `RegisterHuman`, etc.)
+  - `token` (token address)
+  - `tokenOwner`
+
 ## Enums
 
 ### TransferType

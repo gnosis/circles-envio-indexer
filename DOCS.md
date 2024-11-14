@@ -51,6 +51,33 @@ query getGroupMembership($groupAddress: String) {
 }
 ```
 
+v1 trusts and v2 trusts are different entities, even between the same users. And there's a truster and trustee, which would make, filtering by two addresses, the possibility of duplicated results. Here's how it can be done
+
+```graphql
+query getTrustBetweenAddresses($address: String, $userAddress: String) {
+  TrustRelation(
+    where: {
+      _or: [
+        {
+          truster_id: {_eq: $address},
+          trustee_id: {_eq: $userAddress, _neq: $address}
+        },
+        {
+          truster_id: {_eq: $userAddress},
+          trustee_id: {_eq: $address, _neq: $userAddress}
+        }
+      ],
+      version: { _in: [1, 2] }
+    }
+  ) {
+    version
+    isMutual
+    truster_id
+    trustee_id
+  }
+}
+```
+
 
 ### Avatar
 A unified view of all humans, groups, and organizations within the system, supporting both v1 and v2 avatars.

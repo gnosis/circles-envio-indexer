@@ -114,7 +114,7 @@ type Avatar {
 
 type Profile {
   id: ID!
-  name: String!
+  name: String
   description: String
   # groups only
   symbol: String

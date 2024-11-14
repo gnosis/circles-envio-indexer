@@ -186,10 +186,10 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
 
   const profile = (await context.Profile.get(event.params.group)) || {
     id: event.params.group,
-    name: "name not found",
-    description: "",
-    previewImageUrl: "",
-    imageUrl: "",
+    name: undefined,
+    description: undefined,
+    previewImageUrl: undefined,
+    imageUrl: undefined,
   };
 
   context.Profile.set({
@@ -263,11 +263,11 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
 
   const currentProfile = (await context.Profile.get(event.params.avatar)) || {
     id: event.params.avatar,
-    name: "name not found",
-    symbol: "",
-    description: "",
-    previewImageUrl: "",
-    imageUrl: "",
+    name: undefined,
+    symbol: undefined,
+    description: undefined,
+    previewImageUrl: undefined,
+    imageUrl: undefined,
   };
   context.Profile.set({
     ...currentProfile,

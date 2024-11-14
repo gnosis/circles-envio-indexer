@@ -113,17 +113,17 @@ PersonalCRC.Transfer.handler(
 );
 
 Hub.HubTransfer.handler(
-  async ({ event, context }) =>
-    await handleTransfer({
-      event,
-      context,
-      operator: undefined,
-      values: [event.params.amount],
-      tokens: [event.srcAddress],
-      transferType: "HubTransfer",
-      avatarType: "Unknown",
-      version: 1,
-    })
+  async ({ event, context }) => {}
+    // await handleTransfer({
+    //   event,
+    //   context,
+    //   operator: undefined,
+    //   values: [event.params.amount],
+    //   tokens: [event.srcAddress],
+    //   transferType: "HubTransfer",
+    //   avatarType: "Unknown",
+    //   version: 1,
+    // })
 );
 
 // ###############

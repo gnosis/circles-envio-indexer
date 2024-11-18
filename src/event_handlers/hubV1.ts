@@ -203,6 +203,7 @@ Hub.Trust.handler(async ({ event, context }) => {
       expiryTime: maxUint256,
       limit: event.params.limit,
       isMutual,
+      isMigrated: false,
     };
 
     context.TrustRelation.set(entity);

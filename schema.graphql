@@ -60,6 +60,7 @@ type TrustRelation {
   # v1 only or always '100' in case of v2
   limit: BigInt!
   isMutual: Boolean!
+  isMigrated: Boolean!
 }
 
 enum AvatarType {

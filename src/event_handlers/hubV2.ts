@@ -368,6 +368,8 @@ HubV2.Trust.handler(async ({ event, context }) => {
   }
   const trustId =
     `${event.params.truster}${event.params.trustee}2`.toLowerCase();
+  const trustIdV1 =
+    `${event.params.truster}${event.params.trustee}1`.toLowerCase();
   const oppositeTrustId =
     `${event.params.trustee}${event.params.truster}2`.toLowerCase();
   const oppositeTrustRelation = await context.TrustRelation.get(
@@ -453,8 +455,17 @@ HubV2.Trust.handler(async ({ event, context }) => {
     expiryTime: event.params.expiryTime,
     limit: parseEther("100"),
     isMutual,
+    isMigrated: false,
   };
 
   context.TrustRelation.set(entity);
+
+  const trustRelationV1 = await context.TrustRelation.get(trustIdV1);
+  if (trustRelationV1) {
+    context.TrustRelation.set({
+      ...trustRelationV1,
+      isMigrated: true,
+    });
+  }
   await incrementStats(context, "trusts");
 });

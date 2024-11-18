@@ -79,7 +79,8 @@ type AvatarBalance {
   token: Token!
   avatar: Avatar!
   balance: BigInt!
-  inflationaryValue: BigInt
+  # this will be the opposite as the token type. Inflationary if demurrage, deflationary if static
+  computedValue: BigInt!
   lastCalculated: Int
 }
 

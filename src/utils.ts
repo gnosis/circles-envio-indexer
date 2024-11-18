@@ -48,3 +48,7 @@ export async function getProfileMetadataFromIpfs(
   await cache.add(slicedDigest, cidV0, externalData as Profile);
   return { cidV0, data: externalData as Profile };
 }
+
+export function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
+  return `${avatarId}-${tokenId}`;
+}

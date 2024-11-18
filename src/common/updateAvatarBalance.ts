@@ -1,9 +1,6 @@
 import { AvatarBalance, handlerContext } from "generated";
 import { zeroAddress } from "viem";
-
-function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
-  return `${avatarId}-${tokenId}`;
-}
+import { makeAvatarBalanceEntityId } from "../utils";
 
 export const updateAvatarBalance = async (
   context: handlerContext,
@@ -16,29 +13,24 @@ export const updateAvatarBalance = async (
     return;
   }
   const balanceId = makeAvatarBalanceEntityId(avatarId, tokenId);
-  const [avatarBalance, avatar, token] = await Promise.all([
+  const [avatarBalance, avatar] = await Promise.all([
     context.AvatarBalance.get(balanceId),
-    context.Avatar.get(avatarId),
-    context.Token.get(tokenId),
+    context.Avatar.get(avatarId)
   ]);
   if (avatarBalance) {
-    let updated = {
+    context.AvatarBalance.set({
       ...avatarBalance,
+      balance: avatarBalance.balance + amount,
+      computedValue: avatarBalance.computedValue + amount,
       lastCalculated: blockTimestamp,
-    };
-    if (token?.tokenType === "WrappedStaticToken") {
-      updated.inflationaryValue = avatarBalance.inflationaryValue! + amount;
-    } else {
-      updated.balance = avatarBalance.balance + amount;
-    }
-    context.AvatarBalance.set(updated);
+    });
   } else {
     context.AvatarBalance.set({
       id: balanceId,
       avatar_id: avatarId,
       token_id: tokenId,
       balance: amount,
-      inflationaryValue: 0n,
+      computedValue: 0n,
       lastCalculated: blockTimestamp,
     });
   }

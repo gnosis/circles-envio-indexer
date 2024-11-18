@@ -112,19 +112,46 @@ PersonalCRC.Transfer.handler(
     })
 );
 
-Hub.HubTransfer.handler(
-  async ({ event, context }) => {}
-    // await handleTransfer({
-    //   event,
-    //   context,
-    //   operator: undefined,
-    //   values: [event.params.amount],
-    //   tokens: [event.srcAddress],
-    //   transferType: "HubTransfer",
-    //   avatarType: "Unknown",
-    //   version: 1,
-    // })
-);
+Hub.HubTransfer.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    let transfers = await context.Transfer.getWhere.transactionHash.eq(
+      event.transaction.hash
+    );
+
+    return { transfers };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { transfers } = loaderReturn;
+
+    // delete the transfers only
+    // it's important to not reverse balances because of how the pathfinder works.
+    for (let i = 0; i < transfers.length; i++) {
+      context.Transfer.set({
+        ...transfers[i],
+        isPartOfStreamOrHub: true,
+      });
+    }
+
+    // register as transfer
+    context.Transfer.set({
+      id: `${event.transaction.hash}-stream`,
+      safeTxHash: undefined,
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionIndex: event.transaction.transactionIndex,
+      transactionHash: event.transaction.hash,
+      logIndex: event.logIndex,
+      from: event.params.from,
+      to: event.params.to,
+      operator: undefined,
+      value: event.params.amount,
+      token: event.srcAddress,
+      transferType: "HubTransfer",
+      version: 1,
+      isPartOfStreamOrHub: false,
+    });
+  },
+});
 
 // ###############
 // #### TRUST ####

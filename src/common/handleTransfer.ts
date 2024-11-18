@@ -63,7 +63,11 @@ export const handleTransfer = async ({
           ? event.params.to
           : getAddress(`0x${BigInt(tokens[i]).toString(16).padStart(40, '0')}`);
       } catch (_) {
-        tokenOwner_id = event.params.to;
+        try {
+          tokenOwner_id = getAddress(toHex(BigInt(tokens[i])));
+        } catch (_) {
+          tokenOwner_id = event.params.to;
+        }
       }
       context.Token.set({
         id: tokens[i],
@@ -93,7 +97,7 @@ export const handleTransfer = async ({
       token: tokens[i],
       transferType,
       version,
-      isPartOfStream: false,
+      isPartOfStreamOrHub: false,
     };
     context.Transfer.set(transferEntity);
 

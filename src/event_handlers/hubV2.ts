@@ -218,18 +218,9 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
     );
-  } catch (_) {
-    console.log("error in getProfileMetadataFromIpfs", _);
-  }
+  } catch (_) {}
 
   const avatar = await context.Avatar.get(event.params.avatar);
-
-  if (
-    event.params.avatar ===
-    getAddress("0xBe850d5485Ef0F54f4b23e680c0dc371F601a0bE")
-  ) {
-    console.log(event.params, "event params in pending inv");
-  }
 
   if (!avatar) {
     // register group emits metadata event update before the register group event
@@ -295,7 +286,7 @@ HubV2.StreamCompleted.handlerWithLoader({
     for (let i = 0; i < transfers.length; i++) {
       context.Transfer.set({
         ...transfers[i],
-        isPartOfStream: true,
+        isPartOfStreamOrHub: true,
       });
     }
 
@@ -317,7 +308,7 @@ HubV2.StreamCompleted.handlerWithLoader({
       token: event.params.ids[0].toString(),
       transferType: "StreamCompleted",
       version: 2,
-      isPartOfStream: false,
+      isPartOfStreamOrHub: false,
     });
   },
 });

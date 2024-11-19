@@ -12,20 +12,20 @@
     "start": "ts-node generated/src/Index.bs.js"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.11",
-    "@types/mocha": "10.0.6",
-    "@types/node": "20.8.8",
-    "chai": "4.3.10",
-    "mocha": "10.2.0",
+    "@types/chai": "5.0.1",
+    "@types/mocha": "10.0.9",
+    "@types/node": "22.9.0",
+    "chai": "5.1.2",
+    "mocha": "10.8.2",
     "ts-mocha": "^10.0.0",
-    "ts-node": "10.9.1",
-    "typescript": "5.2.2"
+    "ts-node": "10.9.2",
+    "typescript": "5.6.3"
   },
   "dependencies": {
-    "envio": "2.7.3",
-    "viem": "2.21.0",
-    "multihashes": "^4.0.3",
-    "sqlite3": "^5.1.7"
+    "envio": "2.7.4",
+    "viem": "2.21.48",
+    "multihashes": "4.0.3",
+    "sqlite3": "5.1.7"
   },
   "optionalDependencies": {
     "generated": "./generated"

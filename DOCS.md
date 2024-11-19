@@ -78,6 +78,8 @@ query getTrustBetweenAddresses($address: String, $userAddress: String) {
 }
 ```
 
+In case you want only v1 trust that were not migrated, you can query `isMigrated: { _eq: false }`.
+
 
 ### Avatar
 A unified view of all humans, groups, and organizations within the system, supporting both v1 and v2 avatars.
@@ -144,10 +146,33 @@ Defines the type of avatars.
   - `Signup`: v1 user sign-up.
   - `OrganizationSignup`: v1 organization sign-up.
   - `RegisterHuman`: v2 registered or migrated user (with `invitedBy` if migrated).
-  - `Invite`: v2 user awaiting or pending invites.
+  - `Invite`: v2 user that is not yet on circles and has at least one invite.
   - `RegisterGroup`: v2 group.
   - `RegisterOrganization`: v2 organization.
   - `Unknown`: Placeholder during processing; unlikely to occur in steady state.
+
+Suppose you want to get the list of invited users by a given user.
+
+```graphql
+query getInvited($address: String, $limit: Int, $offset: Int) {
+  TrustRelation(
+    where: {version: {_eq: 2}, truster_id: {_eq: $address}, trustee: {avatarType: {_eq: "Invite"}}}
+    order_by: {timestamp: desc}
+    offset: $offset
+    limit: $limit
+  ) {
+    version
+    trustee {
+      id
+      version
+      profile {
+        name
+      }
+      avatarType
+    }
+  }
+}
+```
 
 ### TokenType
 Describes token types within the system.

@@ -102,6 +102,35 @@ A unified view of all humans, groups, and organizations within the system, suppo
 ### AvatarBalance
 This entity tracks token balances for each avatar.
 
+Examples:
+
+Get avatar balances, the token owner for each token and the trust relation between the owner of that token and the user.
+
+```graphql
+query verifiedAndUnverifiedCRCTokens($address: String) {
+  AvatarBalance(where: {avatar_id: {_eq: $address}}) {
+    balance
+    token {
+      id
+      tokenOwner {
+        id
+        profile {
+          name
+        }
+        isVerified
+        trustsGiven(where: {trustee_id: {_eq: $address}}) {
+          trustee_id
+          truster_id
+        }
+        trustsReceived(where: {truster_id: {_eq: $address}}) {
+          trustee_id
+          truster_id
+        }
+      }
+    }
+  }
+}
+```
 
 ### Profile
 The Profile entity contains descriptive metadata (from IPFS) for avatars, including names, images, and symbols for groups.

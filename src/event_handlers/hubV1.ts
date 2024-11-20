@@ -11,9 +11,9 @@ function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
 // #### TOKEN ####
 // ###############
 
-Hub.Signup.contractRegister(async ({ event, context }) => {
-  context.addPersonalCRC(event.params.token);
-});
+// Hub.Signup.contractRegister(async ({ event, context }) => {
+//   context.addPersonalCRC(event.params.token);
+// });
 
 // ###############
 // #### AVATAR ###
@@ -123,8 +123,6 @@ Hub.HubTransfer.handlerWithLoader({
   handler: async ({ event, context, loaderReturn }) => {
     const { transfers } = loaderReturn;
 
-    // delete the transfers only
-    // it's important to not reverse balances because of how the pathfinder works.
     for (let i = 0; i < transfers.length; i++) {
       context.Transfer.set({
         ...transfers[i],
@@ -132,7 +130,6 @@ Hub.HubTransfer.handlerWithLoader({
       });
     }
 
-    // register as transfer
     context.Transfer.set({
       id: `${event.transaction.hash}-stream`,
       safeTxHash: undefined,

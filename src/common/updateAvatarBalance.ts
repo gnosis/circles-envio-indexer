@@ -13,10 +13,7 @@ export const updateAvatarBalance = async (
     return;
   }
   const balanceId = makeAvatarBalanceEntityId(avatarId, tokenId);
-  const [avatarBalance, avatar] = await Promise.all([
-    context.AvatarBalance.get(balanceId),
-    context.Avatar.get(avatarId)
-  ]);
+  const avatarBalance = await context.AvatarBalance.get(balanceId)
   if (avatarBalance) {
     context.AvatarBalance.set({
       ...avatarBalance,
@@ -32,12 +29,6 @@ export const updateAvatarBalance = async (
       balance: amount,
       computedValue: 0n,
       lastCalculated: blockTimestamp,
-    });
-  }
-  if (avatar) {
-    context.Avatar.set({
-      ...avatar,
-      balance: avatar.balance + amount,
     });
   }
 };

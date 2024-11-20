@@ -281,8 +281,6 @@ HubV2.StreamCompleted.handlerWithLoader({
   handler: async ({ event, context, loaderReturn }) => {
     const { transfers } = loaderReturn;
 
-    // delete the transfers only
-    // it's important to not reverse balances because of how the pathfinder works.
     for (let i = 0; i < transfers.length; i++) {
       context.Transfer.set({
         ...transfers[i],
@@ -290,7 +288,6 @@ HubV2.StreamCompleted.handlerWithLoader({
       });
     }
 
-    // register as transfer
     context.Transfer.set({
       id: `${event.transaction.hash}-stream`,
       safeTxHash: undefined,

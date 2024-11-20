@@ -93,8 +93,8 @@ networks:
 #     - 0x24b3fDCdD9fef844fB3094ef43c0A6Ac23a6dF9E
 #   - name: WrappedERC20
 - id: 100
-  # start_block: 12529458
-  start_block: 36486013
+  start_block: 12529458
+  # start_block: 36486013
   contracts:
   - name: HubV2
     address:

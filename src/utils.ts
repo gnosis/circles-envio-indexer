@@ -1,6 +1,5 @@
 import multihash from "multihashes";
 import { Profile } from "./types";
-import { ProfileCache } from "./cache";
 import { Avatar, eventLog } from "generated";
 
 /**
@@ -28,13 +27,6 @@ export async function getProfileMetadataFromIpfs(
   }
   const slicedDigest = metadataDigest.slice(2, metadataDigest.length);
 
-  const cache = await ProfileCache.init();
-  const cacheResult = await cache.read(slicedDigest);
-
-  if (cacheResult) {
-    return cacheResult;
-  }
-
   const cidV0 = uint8ArrayToCidV0(
     Uint8Array.from(Buffer.from(slicedDigest, "hex"))
   );
@@ -46,7 +38,6 @@ export async function getProfileMetadataFromIpfs(
     return { cidV0, data: null };
   }
 
-  await cache.add(slicedDigest, cidV0, externalData as Profile);
   return { cidV0, data: externalData as Profile };
 }
 

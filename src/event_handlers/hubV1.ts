@@ -89,7 +89,7 @@ PersonalCRC.Transfer.handler(
 
 Hub.HubTransfer.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let transfers = await context.Transfer.getWhere.transactionHash.eq(
+    const transfers = await context.Transfer.getWhere.transactionHash.eq(
       event.transaction.hash
     );
 
@@ -121,6 +121,8 @@ Hub.HubTransfer.handlerWithLoader({
       transferType: "HubTransfer",
       version: 1,
       isPartOfStreamOrHub: false,
+      demurrageFrom_id: undefined,
+      demurrageTo_id: undefined,
     });
   },
 });

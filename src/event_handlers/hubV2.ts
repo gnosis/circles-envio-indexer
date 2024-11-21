@@ -5,7 +5,7 @@ import {
   NameRegistry,
   SafeAccount,
 } from "generated";
-import { toBytes, bytesToBigInt, parseEther } from "viem";
+import { toBytes, bytesToBigInt, parseEther, zeroAddress } from "viem";
 import { incrementStats } from "../incrementStats";
 import {
   defaultAvatarProps,
@@ -169,14 +169,33 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
   await incrementStats(context, "signups");
 });
 
-HubV2.PersonalMint.handler(async ({ event, context }) => {
-  const avatar = await context.Avatar.get(event.params.human);
-  if (avatar) {
-    context.Avatar.set({
-      ...avatar,
-      lastMint: event.block.timestamp,
+HubV2.PersonalMint.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const [avatar, transfers] = await Promise.all([
+      context.Avatar.get(event.params.human),
+      context.Transfer.getWhere.transactionHash.eq(event.transaction.hash),
+    ]);
+
+    return {
+      avatar,
+      transfers,
+    };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { avatar, transfers } = loaderReturn;
+    if (avatar) {
+      context.Avatar.set({
+        ...avatar,
+        lastMint: event.block.timestamp,
+      });
+    }
+    transfers.forEach((transfer) => {
+      context.Transfer.set({
+        ...transfer,
+        transferType: "PersonalMint",
+      });
     });
-  }
+  },
 });
 
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
@@ -231,10 +250,18 @@ HubV2.StreamCompleted.handlerWithLoader({
       event.transaction.hash
     );
 
-    return { transfers };
+    return {
+      transfers,
+      demurrageFrom: transfers.filter(
+        (t) => t.to === zeroAddress && t.from === event.params.from
+      ),
+      demurrageTo: transfers.filter(
+        (t) => t.to === zeroAddress && t.from === event.params.to
+      ),
+    };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { transfers } = loaderReturn;
+    const { transfers, demurrageFrom, demurrageTo } = loaderReturn;
 
     for (let i = 0; i < transfers.length; i++) {
       context.Transfer.set({
@@ -261,6 +288,9 @@ HubV2.StreamCompleted.handlerWithLoader({
       transferType: "StreamCompleted",
       version: 2,
       isPartOfStreamOrHub: false,
+      // same as in transfer, there should be only one demmu
+      demurrageFrom_id: demurrageFrom[0]?.id,
+      demurrageTo_id: demurrageTo[0]?.id,
     });
   },
 });
@@ -268,11 +298,19 @@ HubV2.StreamCompleted.handlerWithLoader({
 HubV2.TransferSingle.handlerWithLoader({
   loader: async ({ event, context }) => {
     let avatar = await context.Avatar.get(event.params.to);
+    const transfers = await context.Transfer.getWhere.transactionHash.eq(
+      event.transaction.hash
+    );
 
-    return { avatar };
+    return {
+      avatar,
+      demurrageTransfer: transfers.filter(
+        (t) => t.to === zeroAddress && t.from === event.params.to
+      ),
+    };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatar } = loaderReturn;
+    const { avatar, demurrageTransfer } = loaderReturn;
     await handleTransfer({
       event,
       context,
@@ -282,6 +320,8 @@ HubV2.TransferSingle.handlerWithLoader({
       transferType: "TransferSingle",
       avatarType: avatar?.avatarType ?? "Unknown",
       version: 2,
+      demurrageTransferId:
+        demurrageTransfer.length > 0 ? demurrageTransfer[0].id : undefined,
     });
   },
 });
@@ -307,11 +347,26 @@ HubV2.DiscountCost.handlerWithLoader({
       event.params.id.toString()
     );
     const avatarBalance = await context.AvatarBalance.get(avatarBalanceId);
+    const transfers = await context.Transfer.getWhere.transactionHash.eq(
+      event.transaction.hash
+    );
 
-    return { avatarBalance };
+    return {
+      avatarBalance,
+      demurrageTransfer: transfers.filter(
+        (t) => t.to === zeroAddress && t.from === event.params.account
+      ),
+    };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatarBalance } = loaderReturn;
+    const { avatarBalance, demurrageTransfer } = loaderReturn;
+    if (demurrageTransfer.length > 0) {
+      // to each user, only one demurrage is applied
+      context.Transfer.set({
+        ...demurrageTransfer[0],
+        transferType: "Demurrage",
+      });
+    }
     if (avatarBalance) {
       context.AvatarBalance.set({
         ...avatarBalance,

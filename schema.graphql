@@ -11,6 +11,8 @@ enum TransferType {
   Erc20WrapperTransfer
   TransferSingle
   TransferBatch
+  Demurrage
+  PersonalMint
   StreamCompleted
   HubTransfer
   Transfer
@@ -43,6 +45,9 @@ type Transfer {
   # is either the v2 token-id or the v1 token address; both in address format
   token: String!
   isPartOfStreamOrHub: Boolean!
+  # demurrage can be applied both to sender and receiver
+  demurrageFrom: Transfer
+  demurrageTo: Transfer
 }
 
 type TrustRelation {

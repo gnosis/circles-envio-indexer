@@ -38,6 +38,7 @@ export const handleTransfer = async ({
   transferType,
   avatarType,
   version,
+  demurrageTransferId,
 }: {
   event: eventLog<
     | Hub_HubTransfer_eventArgs
@@ -53,6 +54,7 @@ export const handleTransfer = async ({
   transferType: TransferType_t;
   avatarType: AvatarType_t;
   version: number;
+  demurrageTransferId?: string | undefined;
 }) => {
   for (let i = 0; i < tokens.length; i++) {
     const token = await context.Token.get(tokens[i]);
@@ -61,7 +63,7 @@ export const handleTransfer = async ({
       try {
         tokenOwner_id = tokens[i].startsWith("0x")
           ? event.params.to
-          : getAddress(`0x${BigInt(tokens[i]).toString(16).padStart(40, '0')}`);
+          : getAddress(`0x${BigInt(tokens[i]).toString(16).padStart(40, "0")}`);
       } catch (_) {
         try {
           tokenOwner_id = getAddress(toHex(BigInt(tokens[i])));
@@ -98,6 +100,8 @@ export const handleTransfer = async ({
       transferType,
       version,
       isPartOfStreamOrHub: false,
+      demurrageFrom_id: demurrageTransferId,
+      demurrageTo_id: undefined,
     };
     context.Transfer.set(transferEntity);
 

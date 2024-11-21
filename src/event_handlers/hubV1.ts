@@ -11,9 +11,12 @@ function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
 // #### TOKEN ####
 // ###############
 
-// Hub.Signup.contractRegister(async ({ event, context }) => {
-//   context.addPersonalCRC(event.params.token);
-// });
+Hub.Signup.contractRegister(
+  async ({ event, context }) => {
+    context.addPersonalCRC(event.params.token);
+  },
+  { preRegisterDynamicContracts: true }
+);
 
 // ###############
 // #### AVATAR ###

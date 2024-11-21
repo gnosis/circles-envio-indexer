@@ -16,9 +16,12 @@ import { handleTransfer } from "../common/handleTransfer";
 // #### TOKEN ####
 // ###############
 
-ERC20Lift.ERC20WrapperDeployed.contractRegister(async ({ event, context }) => {
-  context.addWrappedERC20(event.params.erc20Wrapper);
-});
+ERC20Lift.ERC20WrapperDeployed.contractRegister(
+  async ({ event, context }) => {
+    context.addWrappedERC20(event.params.erc20Wrapper);
+  },
+  { preRegisterDynamicContracts: true }
+);
 
 ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.avatar);
@@ -86,9 +89,12 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
   }
 });
 
-HubV2.RegisterHuman.contractRegister(async ({ event, context }) => {
-  context.addSafeAccount(event.params.avatar);
-});
+HubV2.RegisterHuman.contractRegister(
+  async ({ event, context }) => {
+    context.addSafeAccount(event.params.avatar);
+  },
+  { preRegisterDynamicContracts: true }
+);
 
 SafeAccount.ExecutionSuccess.handlerWithLoader({
   loader: async ({ event, context }) => {

@@ -422,7 +422,7 @@ HubV2.Trust.handler(async ({ event, context }) => {
   if (isUntrust) {
     // this is untrust
     const trustRelation = await context.TrustRelation.get(trustId);
-    if (trustRelation && oppositeTrustRelation) {
+    if (trustRelation) {
       context.TrustRelation.set({
         ...trustRelation,
         expiryTime: 0n,
@@ -432,6 +432,8 @@ HubV2.Trust.handler(async ({ event, context }) => {
         logIndex: event.logIndex,
         isMutual: false,
       });
+    }
+    if (oppositeTrustRelation) {
       context.TrustRelation.set({
         ...oppositeTrustRelation,
         isMutual: false,

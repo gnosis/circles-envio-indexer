@@ -106,11 +106,16 @@ type Avatar {
   balances: [AvatarBalance!]! @derivedFrom(field: "avatar")
   # balance of all tokens aggregated
   balance: BigInt!
+  # array of trusts given
   trustsGiven: [TrustRelation!]! @derivedFrom(field: "truster")
+  # array of trusts received
   trustsReceived: [TrustRelation!]! @derivedFrom(field: "trustee")
+  # count of trusts given
+  trustsGivenCount: Int!
+  # count of trusts received
+  trustsReceivedCount: Int!
   lastMint: Int
-  mintEndPeriod: Int
-  lastDemurrageUpdate: Int
+  # deprecated! use `trustsReceivedCount` instead
   trustedByN: Int!
   isVerified: Boolean!
   profile: Profile

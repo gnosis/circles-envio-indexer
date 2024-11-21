@@ -1,14 +1,17 @@
 import {
   ERC20Lift,
   HubV2,
-  Avatar,
   TrustRelation,
   NameRegistry,
   SafeAccount,
 } from "generated";
-import { toBytes, bytesToBigInt, parseEther, getAddress } from "viem";
+import { toBytes, bytesToBigInt, parseEther } from "viem";
 import { incrementStats } from "../incrementStats";
-import { getProfileMetadataFromIpfs } from "../utils";
+import {
+  defaultAvatarProps,
+  getProfileMetadataFromIpfs,
+  makeAvatarBalanceEntityId,
+} from "../utils";
 import { Profile } from "../types";
 import { handleTransfer } from "../common/handleTransfer";
 
@@ -54,37 +57,26 @@ ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
 HubV2.RegisterHuman.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.avatar);
   if (avatar) {
+    // when migrating from v1
     context.Avatar.set({
       ...avatar,
       avatarType: "RegisterHuman",
       version: 2,
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
-      trustedByN: 0,
+      trustsGivenCount: 0,
+      trustsReceivedCount: 0,
+      invitedBy: event.params.inviter,
     });
   } else {
-    const avatarEntity: Avatar = {
+    context.Avatar.set({
+      ...defaultAvatarProps(event),
+      version: 2,
       id: event.params.avatar,
       avatarType: "RegisterHuman",
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionHash: event.transaction.hash,
-      invitedBy: undefined,
-      version: 2,
-      logIndex: event.logIndex,
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
-      cidV0: undefined,
-      transactionIndex: event.transaction.transactionIndex,
-      wrappedTokenId: undefined,
-      balance: 0n,
-      lastMint: undefined,
-      mintEndPeriod: undefined,
-      lastDemurrageUpdate: undefined,
-      trustedByN: 0,
-      isVerified: false,
       profile_id: event.params.avatar,
-    };
-
-    context.Avatar.set(avatarEntity);
+      invitedBy: event.params.inviter,
+    });
     await incrementStats(context, "signups");
   }
 });
@@ -117,37 +109,22 @@ SafeAccount.ExecutionSuccess.handlerWithLoader({
 });
 
 HubV2.RegisterOrganization.handler(async ({ event, context }) => {
-  const avatarEntity: Avatar = {
+  context.Avatar.set({
+    ...defaultAvatarProps(event),
+    version: 2,
     id: event.params.organization,
     avatarType: "RegisterOrganization",
-    blockNumber: event.block.number,
-    timestamp: event.block.timestamp,
-    transactionHash: event.transaction.hash,
-    invitedBy: undefined,
-    version: 2,
-    logIndex: event.logIndex,
     tokenId: bytesToBigInt(toBytes(event.params.organization)).toString(),
-    cidV0: undefined,
-    transactionIndex: event.transaction.transactionIndex,
-    wrappedTokenId: undefined,
-    balance: 0n,
-    lastMint: undefined,
-    mintEndPeriod: undefined,
-    lastDemurrageUpdate: undefined,
-    trustedByN: 0,
-    isVerified: false,
     profile_id: event.params.organization,
-  };
-
-  context.Avatar.set(avatarEntity);
+  });
 
   context.Profile.set({
     id: event.params.organization,
-    description: "",
-    previewImageUrl: "",
-    imageUrl: "",
+    description: undefined,
+    previewImageUrl: undefined,
+    imageUrl: undefined,
     name: event.params.name,
-    symbol: "",
+    symbol: undefined,
   });
   await incrementStats(context, "signups");
 });
@@ -156,29 +133,14 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
   const avatar = await context.Avatar.get(event.params.group);
 
   if (!avatar) {
-    const avatarEntity: Avatar = {
+    context.Avatar.set({
+      ...defaultAvatarProps(event),
+      version: 2,
       id: event.params.group,
       avatarType: "RegisterGroup",
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionHash: event.transaction.hash,
-      invitedBy: undefined,
-      version: 2,
-      logIndex: event.logIndex,
       tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
-      cidV0: undefined,
-      transactionIndex: event.transaction.transactionIndex,
-      wrappedTokenId: undefined,
-      balance: 0n,
-      lastMint: undefined,
-      mintEndPeriod: undefined,
-      lastDemurrageUpdate: undefined,
-      trustedByN: 0,
-      isVerified: false,
       profile_id: event.params.group,
-    };
-
-    context.Avatar.set(avatarEntity);
+    });
   } else {
     context.Avatar.set({
       ...avatar,
@@ -213,7 +175,6 @@ HubV2.PersonalMint.handler(async ({ event, context }) => {
     context.Avatar.set({
       ...avatar,
       lastMint: event.block.timestamp,
-      mintEndPeriod: parseInt(event.params.endPeriod.toString()),
     });
   }
 });
@@ -231,24 +192,12 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
   if (!avatar) {
     // register group emits metadata event update before the register group event
     context.Avatar.set({
+      ...defaultAvatarProps(event),
+      version: 2,
       id: event.params.avatar,
       avatarType: "Unknown",
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionHash: event.transaction.hash,
-      invitedBy: undefined,
-      version: 2,
-      logIndex: event.logIndex,
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
       cidV0: profileMetadata?.cidV0,
-      transactionIndex: event.transaction.transactionIndex,
-      wrappedTokenId: undefined,
-      balance: 0n,
-      lastMint: undefined,
-      mintEndPeriod: undefined,
-      lastDemurrageUpdate: undefined,
-      trustedByN: 0,
-      isVerified: false,
       profile_id: event.params.avatar,
     });
   } else {
@@ -351,126 +300,163 @@ HubV2.TransferBatch.handler(
     })
 );
 
-HubV2.DiscountCost.handler(async ({ event, context }) => {
-  const avatar = await context.Avatar.get(event.params.account);
-  if (avatar) {
-    context.Avatar.set({
-      ...avatar,
-      lastDemurrageUpdate: event.block.timestamp,
-    });
-  }
+HubV2.DiscountCost.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const avatarBalanceId = makeAvatarBalanceEntityId(
+      event.params.account,
+      event.params.id.toString()
+    );
+    const avatarBalance = await context.AvatarBalance.get(avatarBalanceId);
+
+    return { avatarBalance };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { avatarBalance } = loaderReturn;
+    if (avatarBalance) {
+      context.AvatarBalance.set({
+        ...avatarBalance,
+        lastCalculated: event.block.timestamp,
+      });
+    }
+  },
 });
 
 // ###############
 // #### TRUST ####
 // ###############
 
-HubV2.Trust.handler(async ({ event, context }) => {
-  if (event.params.trustee === event.params.truster) {
-    return;
-  }
-  const trustId =
-    `${event.params.truster}${event.params.trustee}2`.toLowerCase();
-  const trustIdV1 =
-    `${event.params.truster}${event.params.trustee}1`.toLowerCase();
-  const oppositeTrustId =
-    `${event.params.trustee}${event.params.truster}2`.toLowerCase();
-  const oppositeTrustRelation = await context.TrustRelation.get(
-    oppositeTrustId
-  );
-  const timeDifference =
-    event.params.expiryTime - BigInt(event.block.timestamp);
-  const isUntrust = timeDifference < 3600n;
+HubV2.Trust.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const trustId =
+      `${event.params.truster}${event.params.trustee}2`.toLowerCase();
+    const trustIdV1 =
+      `${event.params.truster}${event.params.trustee}1`.toLowerCase();
+    const oppositeTrustId =
+      `${event.params.trustee}${event.params.truster}2`.toLowerCase();
 
-  // invite
-  const avatarTrustee = await context.Avatar.get(event.params.trustee);
+    const [
+      oppositeTrustRelation,
+      avatarTrustee,
+      avatarTruster,
+      trustRelation,
+      trustRelationV1,
+    ] = await Promise.all([
+      context.TrustRelation.get(oppositeTrustId),
+      context.Avatar.get(event.params.trustee),
+      context.Avatar.get(event.params.truster),
+      context.TrustRelation.get(trustId),
+      context.TrustRelation.get(trustIdV1),
+    ]);
 
-  if (!avatarTrustee) {
-    context.Avatar.set({
-      id: event.params.trustee,
-      avatarType: "Invite",
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionHash: event.transaction.hash,
-      invitedBy: event.params.truster,
-      version: 2,
-      logIndex: event.logIndex,
-      tokenId: undefined,
-      cidV0: undefined,
-      transactionIndex: event.transaction.transactionIndex,
-      wrappedTokenId: undefined,
-      balance: 0n,
-      lastMint: undefined,
-      mintEndPeriod: undefined,
-      lastDemurrageUpdate: undefined,
-      trustedByN: 1,
-      isVerified: false,
-      profile_id: event.params.trustee,
-    });
-  } else {
-    const newTurdtedByN = isUntrust
-      ? avatarTrustee.trustedByN - 1
-      : avatarTrustee.trustedByN + 1;
-    context.Avatar.set({
-      ...avatarTrustee,
-      invitedBy: event.params.truster,
-      trustedByN: newTurdtedByN,
-      isVerified: newTurdtedByN >= 3,
-    });
-  }
+    return {
+      avatarTrustee,
+      avatarTruster,
+      trustRelation,
+      oppositeTrustRelation,
+      trustId,
+      trustRelationV1,
+    };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const {
+      avatarTrustee,
+      avatarTruster,
+      trustRelation,
+      oppositeTrustRelation,
+      trustId,
+      trustRelationV1,
+    } = loaderReturn;
 
-  if (isUntrust) {
-    // this is untrust
-    const trustRelation = await context.TrustRelation.get(trustId);
-    if (trustRelation) {
-      context.TrustRelation.set({
-        ...trustRelation,
-        expiryTime: 0n,
-        limit: 0n,
-        blockNumber: event.block.number,
-        timestamp: event.block.timestamp,
-        logIndex: event.logIndex,
-        isMutual: false,
+    if (event.params.trustee === event.params.truster) {
+      return;
+    }
+
+    const timeDifference =
+      event.params.expiryTime - BigInt(event.block.timestamp);
+    const isUntrust = timeDifference < 3600n;
+
+    if (!avatarTrustee) {
+      context.Avatar.set({
+        ...defaultAvatarProps(event),
+        version: 2,
+        id: event.params.trustee,
+        avatarType: "Invite",
+        profile_id: event.params.trustee,
+        trustsReceivedCount: 1,
+      });
+    } else {
+      const newTrustsReceivedCount = isUntrust
+        ? avatarTrustee.trustsReceivedCount - 1
+        : avatarTrustee.trustsReceivedCount + 1;
+      context.Avatar.set({
+        ...avatarTrustee,
+        trustsReceivedCount: newTrustsReceivedCount,
+        isVerified: newTrustsReceivedCount >= 3,
       });
     }
-    if (oppositeTrustRelation) {
+
+    if (avatarTruster) {
+      const newTrustGivenCount = isUntrust
+        ? avatarTruster.trustsGivenCount - 1
+        : avatarTruster.trustsGivenCount + 1;
+
+      context.Avatar.set({
+        ...avatarTruster,
+        trustsGivenCount: newTrustGivenCount,
+      });
+    }
+
+    if (isUntrust) {
+      // this is untrust
+      if (trustRelation) {
+        context.TrustRelation.set({
+          ...trustRelation,
+          expiryTime: 0n,
+          limit: 0n,
+          blockNumber: event.block.number,
+          timestamp: event.block.timestamp,
+          logIndex: event.logIndex,
+          isMutual: false,
+        });
+      }
+      if (oppositeTrustRelation) {
+        context.TrustRelation.set({
+          ...oppositeTrustRelation,
+          isMutual: false,
+        });
+      }
+      return;
+    }
+    const isMutual = oppositeTrustRelation !== undefined;
+    if (isMutual) {
       context.TrustRelation.set({
         ...oppositeTrustRelation,
-        isMutual: false,
+        isMutual: true,
       });
     }
-    return;
-  }
-  const isMutual = oppositeTrustRelation !== undefined;
-  if (isMutual) {
-    context.TrustRelation.set({
-      ...oppositeTrustRelation,
-      isMutual: true,
-    });
-  }
-  const entity: TrustRelation = {
-    id: trustId,
-    blockNumber: event.block.number,
-    timestamp: event.block.timestamp,
-    transactionIndex: event.transaction.transactionIndex,
-    logIndex: event.logIndex,
-    version: 2,
-    trustee_id: event.params.trustee,
-    truster_id: event.params.truster,
-    expiryTime: event.params.expiryTime,
-    limit: parseEther("100"),
-    isMutual,
-    isMigrated: false,
-  };
+    const entity: TrustRelation = {
+      id: trustId,
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionIndex: event.transaction.transactionIndex,
+      logIndex: event.logIndex,
+      version: 2,
+      trustee_id: event.params.trustee,
+      truster_id: event.params.truster,
+      expiryTime: event.params.expiryTime,
+      limit: parseEther("100"),
+      isMutual,
+      isMigrated: false,
+    };
 
-  context.TrustRelation.set(entity);
+    context.TrustRelation.set(entity);
 
-  const trustRelationV1 = await context.TrustRelation.get(trustIdV1);
-  if (trustRelationV1) {
-    context.TrustRelation.set({
-      ...trustRelationV1,
-      isMigrated: true,
-    });
-  }
-  await incrementStats(context, "trusts");
+    if (trustRelationV1) {
+      context.TrustRelation.set({
+        ...trustRelationV1,
+        isMigrated: true,
+      });
+    }
+    await incrementStats(context, "trusts");
+  },
 });

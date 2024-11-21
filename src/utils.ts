@@ -1,6 +1,7 @@
 import multihash from "multihashes";
 import { Profile } from "./types";
 import { ProfileCache } from "./cache";
+import { Avatar, eventLog } from "generated";
 
 /**
  * Converts a 32-byte UInt8Array back to a CIDv0 string by adding the hashing algorithm identifier.
@@ -51,4 +52,29 @@ export async function getProfileMetadataFromIpfs(
 
 export function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {
   return `${avatarId}-${tokenId}`;
+}
+
+export function defaultAvatarProps(event: eventLog<any>) {
+  return {
+    id: "default",
+    avatarType: "Unknown",
+    tokenId: undefined,
+    cidV0: undefined,
+    profile_id: undefined,
+    version: 0,
+    //
+    blockNumber: event.block.number,
+    timestamp: event.block.timestamp,
+    transactionHash: event.transaction.hash,
+    invitedBy: undefined,
+    logIndex: event.logIndex,
+    transactionIndex: event.transaction.transactionIndex,
+    wrappedTokenId: undefined,
+    balance: 0n,
+    lastMint: undefined,
+    trustsGivenCount: 0,
+    trustsReceivedCount: 0,
+    trustedByN: 0,
+    isVerified: false,
+  } as Avatar;
 }

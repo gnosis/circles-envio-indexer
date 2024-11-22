@@ -7,13 +7,10 @@ import {
 } from "generated";
 import { toBytes, bytesToBigInt, parseEther, zeroAddress } from "viem";
 import { incrementStats } from "../incrementStats";
-import {
-  defaultAvatarProps,
-  getProfileMetadataFromIpfs,
-  makeAvatarBalanceEntityId,
-} from "../utils";
+import { defaultAvatarProps, makeAvatarBalanceEntityId } from "../utils";
 import { Profile } from "../types";
 import { handleTransfer } from "../common/handleTransfer";
+import { getProfileMetadataFromIpfs } from "../ipfs";
 
 // ###############
 // #### TOKEN ####
@@ -204,7 +201,9 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
     );
-  } catch (_) {}
+  } catch (_) {
+    console.log("Error in nameReg fetching Ipfs", _);
+  }
 
   const avatar = await context.Avatar.get(event.params.avatar);
 

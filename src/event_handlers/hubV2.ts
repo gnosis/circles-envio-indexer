@@ -7,13 +7,10 @@ import {
 } from "generated";
 import { toBytes, bytesToBigInt, parseEther, zeroAddress } from "viem";
 import { incrementStats } from "../incrementStats";
-import {
-  defaultAvatarProps,
-  getProfileMetadataFromIpfs,
-  makeAvatarBalanceEntityId,
-} from "../utils";
+import { defaultAvatarProps, makeAvatarBalanceEntityId } from "../utils";
 import { Profile } from "../types";
 import { handleTransfer } from "../common/handleTransfer";
+import { getProfileMetadataFromIpfs } from "../ipfs";
 
 // ###############
 // #### TOKEN ####
@@ -199,12 +196,15 @@ HubV2.PersonalMint.handlerWithLoader({
 });
 
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
+  console.log("Coming inside nameReg here: e", event.params.metadataDigest);
   let profileMetadata: { cidV0: string; data: Profile | null } | null = null;
   try {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
     );
-  } catch (_) {}
+  } catch (_) {
+    console.log("Error in nameReg fetching Ipfs", _);
+  }
 
   const avatar = await context.Avatar.get(event.params.avatar);
 

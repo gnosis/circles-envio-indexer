@@ -8,7 +8,7 @@ import { Avatar, eventLog } from "generated";
  * @param {Uint8Array} uint8Array - The 32-byte hash digest.
  * @returns {string} - The resulting CIDv0 string (e.g., Qm...).
  */
-function uint8ArrayToCidV0(uint8Array: Uint8Array): string {
+export function uint8ArrayToCidV0(uint8Array: Uint8Array): string {
   if (uint8Array.length !== 32) {
     throw new Error("Invalid array length. Expected 32 bytes.");
   }
@@ -18,36 +18,6 @@ function uint8ArrayToCidV0(uint8Array: Uint8Array): string {
 
   // Encode the Multihash as a base58 CIDv0 string
   return multihash.toB58String(multihashBytes);
-}
-
-export async function getProfileMetadataFromIpfs(
-  metadataDigest: string
-): Promise<{ cidV0: string; data: Profile | null } | null> {
-  if (!metadataDigest) {
-    return null;
-  }
-  const slicedDigest = metadataDigest.slice(2, metadataDigest.length);
-
-  const cache = await ProfileCache.init();
-  const cacheResult = await cache.read(slicedDigest);
-
-  if (cacheResult) {
-    return cacheResult;
-  }
-
-  const cidV0 = uint8ArrayToCidV0(
-    Uint8Array.from(Buffer.from(slicedDigest, "hex"))
-  );
-
-  const externalResponse = await fetch(`https://ipfs.io/ipfs/${cidV0}`);
-  const externalData = await externalResponse.json();
-
-  if (!externalData) {
-    return { cidV0, data: null };
-  }
-
-  await cache.add(slicedDigest, cidV0, externalData as Profile);
-  return { cidV0, data: externalData as Profile };
 }
 
 export function makeAvatarBalanceEntityId(avatarId: string, tokenId: string) {

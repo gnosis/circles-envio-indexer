@@ -18,6 +18,42 @@ A unified view of all transfer transactions within the system, consolidating bot
   - `type` (transaction type; e.g., `Erc20WrapperTransfer`, `TransferSingle`, etc.)
   - `tokenType` (e.g., `RegisterGroup`, `RegisterHuman`, etc.)
 
+#### Transfers with demurrage
+
+It's possible to get demurrages that happened during transfers or mints.
+
+```graphql
+query getUserTransfers($address: String) {
+	Transfer(
+    where:{
+      to:{_eq:$address},
+      transferType:{_neq:"Demurrage"}
+    }
+    order_by:{timestamp: desc}
+  ) {
+    id
+    from
+    transferType
+    timestamp
+    to
+    value
+    demurrageFrom {
+      id
+      value
+    }
+    demurrageTo {
+      id
+      from
+      value
+    }
+  }
+}
+```
+
+This would not list demurrages transfers on the list, only within the transfers when they happened.
+
+Normally, it's the `demurrageFrom` that contains the demurrage data. But if `transferType` is `StreamCompleted`, then, there might be the case that the user receiving the transfer will also have some demurrage applied. What is needed in that case to show data correctly is to compare `demurrageTo.from` with the user (on app). If it's the same, show `demurrageTo.value`, otherwise show `demurrageFrom.value`. In any on this cases, `demurrageTo` and `demurrageFrom` can be null.
+
 
 ### TrustRelation
 Provides a unified view of active trust relationships, consolidating data from both v1 and v2. A v2 trust won't replace a v1 trust.

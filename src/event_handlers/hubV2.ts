@@ -196,7 +196,6 @@ HubV2.PersonalMint.handlerWithLoader({
 });
 
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
-  console.log("Coming inside nameReg here", event.params.metadataDigest);
   let profileMetadata: { cidV0: string; data: Profile | null } | null = null;
   try {
     profileMetadata = await getProfileMetadataFromIpfs(

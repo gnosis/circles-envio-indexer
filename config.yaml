@@ -6,112 +6,113 @@ field_selection:
     - hash
     - transactionIndex
 contracts:
-- name: Hub
-  handler: src/event_handlers/hubV1.ts
-  events:
-  - event: HubTransfer(address indexed from, address indexed to, uint256 amount)
-  - event: OrganizationSignup(address indexed organization)
-  - event: Signup(address indexed user, address token)
-  - event: Trust(address indexed canSendTo, address indexed user, uint256 limit)
-- name: PersonalCRC
-  abi_file_path: abis/PersonalCRC.json
-  handler: src/event_handlers/hubV1.ts
-  events:
-  - event: Transfer(address indexed from, address indexed to, uint256 amount)
-- name: HubV2
-  handler: src/event_handlers/hubV2.ts
-  events:
-  - event: RegisterHuman(address indexed avatar, address indexed inviter)
-  - event: RegisterOrganization(address indexed organization, string name)
-  - event: RegisterGroup(address indexed group, address indexed mint, address indexed treasury, string name, string symbol)
-  - event: Trust(address indexed truster, address indexed trustee, uint256 expiryTime)
-  - event: Stopped(address indexed avatar)
-  - event: StreamCompleted(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] amounts)
-  - event: PersonalMint(address indexed human, uint256 amount, uint256 period, uint256 endPeriod)
-  - event: TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)
-  - event: TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)
-  - event: DiscountCost(address indexed account, uint256 indexed id, uint256 discountCost)
-- name: ERC20Lift
-  handler: src/event_handlers/hubV2.ts
-  events:
-  - event: ProxyCreation(address proxy, address masterCopy)
-  - event: ERC20WrapperDeployed(address indexed avatar, address indexed erc20Wrapper, uint8 circlesType)
-- name: StandardTreasury
-  handler: src/event_handlers/treasury.ts
-  events:
-  - event: CreateVault(address indexed group, address indexed vault)
-  - event: GroupMintSingle(address indexed group, uint256 indexed id, uint256 value, bytes userData)
-  - event: GroupMintBatch(address indexed group, uint256[] ids, uint256[] values, bytes userData)
-  - event: GroupRedeem(address indexed group, uint256 indexed id, uint256 value, bytes data)
-  - event: GroupRedeemCollateralReturn(address indexed group, address indexed to, uint256[] ids, uint256[] values)
-  - event: GroupRedeemCollateralBurn(address indexed group, uint256[] ids, uint256[] values)
-- name: CustomTreasury
-  handler: src/event_handlers/treasury.ts
-  events:
-  - event: CreateVault(address indexed group, address indexed vault)
-  - event: GroupMintSingle(address indexed group, uint256 indexed id, uint256 value, bytes userData)
-  - event: GroupMintBatch(address indexed group, uint256[] ids, uint256[] values, bytes userData)
-  - event: GroupRedeem(address indexed group, uint256 indexed id, uint256 value, bytes data)
-  - event: GroupRedeemCollateralReturn(address indexed group, address indexed to, uint256[] ids, uint256[] values)
-  - event: GroupRedeemCollateralBurn(address indexed group, uint256[] ids, uint256[] values)
-- name: NameRegistry
-  handler: src/event_handlers/hubV2.ts
-  events:
-  - event: UpdateMetadataDigest(address indexed avatar, bytes32 metadataDigest)
-- name: WrappedERC20
-  handler: src/event_handlers/wrappedERC20.ts
-  events:
-  - event: Transfer(address indexed from, address indexed to, uint256 value)
-  - event: DepositDemurraged(address indexed account, uint256 amount, uint256 inflationaryAmount)
-  - event: WithdrawDemurraged(address indexed account, uint256 amount, uint256 inflationaryAmount)
-  - event: DepositInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
-  - event: WithdrawInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
-- name: SafeAccount
-  handler: src/event_handlers/hubV2.ts
-  events:
-    - event: ExecutionSuccess(bytes32 txHash, uint256 payment)
+  - name: Hub
+    handler: src/event_handlers/hubV1.ts
+    events:
+      - event: HubTransfer(address indexed from, address indexed to, uint256 amount)
+      - event: OrganizationSignup(address indexed organization)
+      - event: Signup(address indexed user, address token)
+      - event: Trust(address indexed canSendTo, address indexed user, uint256 limit)
+  - name: PersonalCRC
+    abi_file_path: abis/PersonalCRC.json
+    handler: src/event_handlers/hubV1.ts
+    events:
+      - event: Transfer(address indexed from, address indexed to, uint256 amount)
+  - name: HubV2
+    handler: src/event_handlers/hubV2.ts
+    events:
+      - event: RegisterHuman(address indexed avatar, address indexed inviter)
+      - event: RegisterOrganization(address indexed organization, string name)
+      - event: RegisterGroup(address indexed group, address indexed mint, address indexed treasury, string name, string symbol)
+      - event: Trust(address indexed truster, address indexed trustee, uint256 expiryTime)
+      - event: Stopped(address indexed avatar)
+      - event: StreamCompleted(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] amounts)
+      - event: PersonalMint(address indexed human, uint256 amount, uint256 period, uint256 endPeriod)
+      - event: TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)
+      - event: TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)
+      - event: DiscountCost(address indexed account, uint256 indexed id, uint256 discountCost)
+  - name: ERC20Lift
+    handler: src/event_handlers/hubV2.ts
+    events:
+      - event: ProxyCreation(address proxy, address masterCopy)
+      - event: ERC20WrapperDeployed(address indexed avatar, address indexed erc20Wrapper, uint8 circlesType)
+  - name: StandardTreasury
+    handler: src/event_handlers/treasury.ts
+    events:
+      - event: CreateVault(address indexed group, address indexed vault)
+      - event: GroupMintSingle(address indexed group, uint256 indexed id, uint256 value, bytes userData)
+      - event: GroupMintBatch(address indexed group, uint256[] ids, uint256[] values, bytes userData)
+      - event: GroupRedeem(address indexed group, uint256 indexed id, uint256 value, bytes data)
+      - event: GroupRedeemCollateralReturn(address indexed group, address indexed to, uint256[] ids, uint256[] values)
+      - event: GroupRedeemCollateralBurn(address indexed group, uint256[] ids, uint256[] values)
+  - name: CustomTreasury
+    handler: src/event_handlers/treasury.ts
+    events:
+      - event: CreateVault(address indexed group, address indexed vault)
+      - event: GroupMintSingle(address indexed group, uint256 indexed id, uint256 value, bytes userData)
+      - event: GroupMintBatch(address indexed group, uint256[] ids, uint256[] values, bytes userData)
+      - event: GroupRedeem(address indexed group, uint256 indexed id, uint256 value, bytes data)
+      - event: GroupRedeemCollateralReturn(address indexed group, address indexed to, uint256[] ids, uint256[] values)
+      - event: GroupRedeemCollateralBurn(address indexed group, uint256[] ids, uint256[] values)
+  - name: NameRegistry
+    handler: src/event_handlers/hubV2.ts
+    events:
+      - event: UpdateMetadataDigest(address indexed avatar, bytes32 metadataDigest)
+  - name: WrappedERC20
+    handler: src/event_handlers/wrappedERC20.ts
+    events:
+      - event: Transfer(address indexed from, address indexed to, uint256 value)
+      - event: DepositDemurraged(address indexed account, uint256 amount, uint256 inflationaryAmount)
+      - event: WithdrawDemurraged(address indexed account, uint256 amount, uint256 inflationaryAmount)
+      - event: DepositInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
+      - event: WithdrawInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
+  - name: SafeAccount
+    handler: src/event_handlers/hubV2.ts
+    events:
+      - event: ExecutionSuccess(bytes32 txHash, uint256 payment)
 
 networks:
-# - id: 10200
-#   start_block: 2211707
-#   contracts:
-#   - name: Hub
-#     address:
-#     - 0xdbF22D4e8962Db3b2F1d9Ff55be728A887e47710
-#   - name: PersonalCRC
-#   - name: HubV2
-#     address:
-#     - 0xb80feeDfEce647dDc709777D5094fACD157BA001
-#   - name: ERC20Lift
-#     address:
-#     - 0xBD2D6Fbb6A702B04B750Bc9942fBaAE81187355E
-#   - name: StandardTreasury
-#     address:
-#     - 0xC06ADED7950429FdF2023e139B076f6BaFf9Fe1C
-#   - name: NameRegistry
-#     address:
-#     - 0x24b3fDCdD9fef844fB3094ef43c0A6Ac23a6dF9E
-#   - name: WrappedERC20
-- id: 100
-  start_block: 12529458
-  # start_block: 36486013
-  contracts:
-  - name: HubV2
-    address:
-    - 0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8
-  - name: ERC20Lift
-    address:
-    - 0x5F99a795dD2743C36D63511f0D4bc667e6d3cDB5
-  - name: StandardTreasury
-    address:
-    - 0x08F90aB73A515308f03A718257ff9887ED330C6e
-  - name: NameRegistry
-    address:
-    - 0xA27566fD89162cC3D40Cb59c87AAaA49B85F3474
-  - name: WrappedERC20
-  - name: SafeAccount
-  - name: CustomTreasury
-  - name: Hub
-    address:
-    - 0x29b9a7fBb8995b2423a71cC17cf9810798F6C543
-  - name: PersonalCRC
+  # - id: 10200
+  #   start_block: 2211707
+  #   contracts:
+  #   - name: Hub
+  #     address:
+  #     - 0xdbF22D4e8962Db3b2F1d9Ff55be728A887e47710
+  #   - name: PersonalCRC
+  #   - name: HubV2
+  #     address:
+  #     - 0xb80feeDfEce647dDc709777D5094fACD157BA001
+  #   - name: ERC20Lift
+  #     address:
+  #     - 0xBD2D6Fbb6A702B04B750Bc9942fBaAE81187355E
+  #   - name: StandardTreasury
+  #     address:
+  #     - 0xC06ADED7950429FdF2023e139B076f6BaFf9Fe1C
+  #   - name: NameRegistry
+  #     address:
+  #     - 0x24b3fDCdD9fef844fB3094ef43c0A6Ac23a6dF9E
+  #   - name: WrappedERC20
+  - id: 100
+    #start_block: 12529458
+    # start_block: 36486013
+    start_block: 37148256
+    contracts:
+      - name: HubV2
+        address:
+          - 0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8
+      - name: ERC20Lift
+        address:
+          - 0x5F99a795dD2743C36D63511f0D4bc667e6d3cDB5
+      - name: StandardTreasury
+        address:
+          - 0x08F90aB73A515308f03A718257ff9887ED330C6e
+      - name: NameRegistry
+        address:
+          - 0xA27566fD89162cC3D40Cb59c87AAaA49B85F3474
+      - name: WrappedERC20
+      - name: SafeAccount
+      - name: CustomTreasury
+      - name: Hub
+        address:
+          - 0x29b9a7fBb8995b2423a71cC17cf9810798F6C543
+      - name: PersonalCRC

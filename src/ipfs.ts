@@ -61,7 +61,6 @@ async function fetchFromEndpoint(
       }
     }
 
-    console.log(`IPFS fetch from ${endpoint} took ${timeTaken.toFixed(2)}ms`);
     return { data: data as Profile, timeTaken };
   } catch (e) {
     const timeTaken = performance.now() - startTime;

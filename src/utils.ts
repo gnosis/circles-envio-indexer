@@ -1,6 +1,5 @@
 import multihash from "multihashes";
 import { Profile } from "./types";
-import { ProfileCache } from "./cache";
 import { Avatar, eventLog } from "generated";
 
 /**

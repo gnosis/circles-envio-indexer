@@ -214,9 +214,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
     );
-  } catch (_) {
-    console.log("Error in nameReg fetching Ipfs", _);
-  }
+  } catch (_) {}
 
   const avatar = await context.Avatar.get(event.params.avatar);
 

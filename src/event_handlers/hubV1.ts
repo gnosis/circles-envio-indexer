@@ -3,6 +3,7 @@ import { maxUint256 } from "viem";
 import { incrementStats } from "../incrementStats";
 import { handleTransfer } from "../common/handleTransfer";
 import { defaultAvatarProps, makeAvatarBalanceEntityId } from "../utils";
+import { getProfileMetadataFromGardenApi } from "../gardenApi";
 
 // ###############
 // #### TOKEN ####
@@ -42,6 +43,22 @@ Hub.Signup.handlerWithLoader({
   },
   handler: async ({ event, context, loaderReturn }) => {
     const { avatarBalance } = loaderReturn;
+
+    const profileFromGarden = await getProfileMetadataFromGardenApi(
+      event.params.user
+    );
+
+    if (profileFromGarden && profileFromGarden.data) {
+      const { data } = profileFromGarden;
+      context.Profile.set({
+        id: event.params.user,
+        description: undefined,
+        previewImageUrl: data?.previewImageUrl,
+        imageUrl: undefined,
+        name: data?.name,
+        symbol: undefined,
+      });
+    }
 
     context.Avatar.set({
       ...defaultAvatarProps(event),
@@ -151,6 +168,10 @@ Hub.Trust.handlerWithLoader({
   },
   handler: async ({ event, context, loaderReturn }) => {
     const { trustId, trustRelation, oppositeTrustRelation } = loaderReturn;
+
+    if (event.params.user === event.params.canSendTo) {
+      return;
+    }
 
     if (event.params.limit === 0n) {
       // this is untrust

@@ -5,8 +5,8 @@ import { Profile as Metadata } from "./types";
 const db = new sqlite3.Database(".cache/cache.db");
 
 export class ProfileCache {
-  static async init() {
-    const cache = new ProfileCache("cache_v2");
+  static async init(version: number) {
+    const cache = new ProfileCache("cache_cv" + version);
     await cache.createTableIfNotExists();
     return cache;
   }

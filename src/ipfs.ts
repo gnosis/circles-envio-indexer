@@ -72,7 +72,7 @@ async function fetchFromEndpoint(
 
 export async function getProfileMetadataFromIpfs(
   metadataDigest: string
-): Promise<{ cidV0: string; data: Profile | null } | null> {
+): Promise<{ cidV0: string | null; data: Profile | null } | null> {
   if (!metadataDigest) {
     return null;
   }

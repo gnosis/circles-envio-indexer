@@ -37,7 +37,7 @@ export class ProfileCache {
     });
   }
 
-  public read(id: string): Promise<{ cidV0: string; data: Metadata } | null> {
+  public read(id: string): Promise<{ cidV0: string | null; data: Metadata } | null> {
     return new Promise((resolve, reject) => {
       const query = `SELECT data, cidV0 FROM ${this.key} WHERE id = ?`;
       db.get(query, [id], (err, row: any) => {
@@ -53,7 +53,7 @@ export class ProfileCache {
     });
   }
 
-  public async add(id: string, cidV0: string, metadata: Metadata) {
+  public async add(id: string, cidV0: string | null, metadata: Metadata) {
     const query = `INSERT INTO ${this.key} (id, cidV0, data) VALUES (?, ?, ?)`;
     const data = JSON.stringify(metadata);
 

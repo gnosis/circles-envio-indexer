@@ -6,12 +6,12 @@ type GardenApiResponse = {
   data: {
     id: number;
     username: string;
-    avatarUrl: string;
+    avatarUrl: string | undefined;
   }[];
 };
 type GardenProfile = {
   name: string;
-  previewImage: string | undefined;
+  previewImageUrl: string | undefined;
 };
 /**
  * This functions calls https://api.circles.garden/api/users?address[]=${address}
@@ -36,22 +36,14 @@ async function fetchGardenProfile(
     }
 
     const user = json.data[0];
-    let previewImage = undefined;
-    if (user.avatarUrl !== null) {
-      const avatarResponse = await fetch(user.avatarUrl, {
-        headers: { accept: "*/*" },
-      });
-      const avatarArrayBuffer = await avatarResponse.arrayBuffer();
-      const base64 = Buffer.from(avatarArrayBuffer).toString("base64");
-      previewImage = `data:image/jpeg;base64,${base64}`;
-    }
 
-    const gardenProfile: GardenProfile = {
-      name: user.username,
-      previewImage,
+    return {
+      data: {
+        name: user.username,
+        previewImageUrl: user.avatarUrl,
+      },
+      timeTaken: Date.now() - startTime,
     };
-
-    return { data: gardenProfile, timeTaken: Date.now() - startTime };
   } catch (error) {
     console.error("Error fetching garden profile:", error);
     return { data: undefined, timeTaken: Date.now() - startTime };
@@ -78,10 +70,7 @@ export async function getProfileMetadataFromGardenApi(
   }
 
   // v1 did not had cidV0
-  await cache.add(address, address, {
-    name: data.name,
-    previewImageUrl: data.previewImage,
-  });
+  await cache.add(address, null, data);
 
   return { data };
 }

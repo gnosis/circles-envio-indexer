@@ -70,6 +70,7 @@ Provides a unified view of active trust relationships, consolidating data from b
   - `expiryTime` (v2 only or set to UInt256.MAX in v1)
   - `limit` (v1 only or set to `100` in v2)
 
+It's important to note that, when an avatar untrusts another avatar, the trust relation is not deleted, but the `limit` and `expiryTime` are set to `0`.
 
 Trust relations from a group to an avatar represent membership of a group (following the rules on the smart contracts).
 

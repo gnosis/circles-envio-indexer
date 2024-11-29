@@ -87,18 +87,28 @@ HubV2.RegisterHuman.contractRegister(
 
 SafeAccount.ExecutionSuccess.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let transfer = await context.Transfer.getWhere.transactionHash.eq(
+    let transfers = await context.Transfer.getWhere.transactionHash.eq(
       event.transaction.hash
     );
 
-    return { transfer: transfer[0] };
+    return { transfers };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { transfer } = loaderReturn;
+    const { transfers } = loaderReturn;
 
+    const transfer = transfers.find(
+      (t) =>
+        t.transferType === "StreamCompleted" ||
+        t.transferType === "PersonalMint"
+    );
     if (transfer) {
       context.Transfer.set({
         ...transfer,
+        safeTxHash: event.params.txHash,
+      });
+    } else if (transfers.length > 0) {
+      context.Transfer.set({
+        ...transfers[0],
         safeTxHash: event.params.txHash,
       });
     }
@@ -186,12 +196,14 @@ HubV2.PersonalMint.handlerWithLoader({
         lastMint: event.block.timestamp,
       });
     }
-    transfers.forEach((transfer) => {
-      context.Transfer.set({
-        ...transfer,
-        transferType: "PersonalMint",
+    transfers
+      .filter((t) => t.from_id === zeroAddress)
+      .forEach((transfer) => {
+        context.Transfer.set({
+          ...transfer,
+          transferType: "PersonalMint",
+        });
       });
-    });
   },
 });
 

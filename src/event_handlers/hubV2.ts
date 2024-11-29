@@ -197,7 +197,7 @@ HubV2.PersonalMint.handlerWithLoader({
       });
     }
     transfers
-      .filter((t) => t.from_id === zeroAddress)
+      .filter((t) => t.from === zeroAddress)
       .forEach((transfer) => {
         context.Transfer.set({
           ...transfer,

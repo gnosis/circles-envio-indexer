@@ -215,6 +215,7 @@ Defines the type of avatars.
   - `RegisterGroup`: v2 group.
   - `RegisterOrganization`: v2 organization.
   - `Unknown`: Placeholder during processing; unlikely to occur in steady state.
+  - `Migrating`: v1 user that is migrating to v2.
 
 Suppose you want to get the list of invited users by a given user.
 

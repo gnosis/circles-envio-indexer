@@ -4,6 +4,7 @@ import {
   TrustRelation,
   NameRegistry,
   SafeAccount,
+  Avatar,
 } from "generated";
 import { toBytes, bytesToBigInt, parseEther, zeroAddress } from "viem";
 import { incrementStats } from "../incrementStats";
@@ -231,8 +232,13 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       profile_id: event.params.avatar,
     });
   } else {
+    let transitiveType: Avatar["avatarType"] = avatar.avatarType;
+    if (avatar.version === 1) {
+      transitiveType = "Migrating";
+    }
     context.Avatar.set({
       ...avatar,
+      avatarType: transitiveType,
       cidV0: profileMetadata?.cidV0,
     });
   }

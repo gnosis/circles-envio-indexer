@@ -76,6 +76,7 @@ enum AvatarType {
   RegisterGroup
   RegisterOrganization
   Unknown
+  Migrating
 }
 
 type AvatarBalance {

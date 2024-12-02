@@ -464,6 +464,7 @@ HubV2.Trust.handlerWithLoader({
         ...avatarTrustee,
         trustsReceivedCount: newTrustsReceivedCount,
         isVerified: newTrustsReceivedCount >= 3,
+        avatarType: "Invite",
       });
     }
 

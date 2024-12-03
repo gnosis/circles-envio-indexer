@@ -209,14 +209,12 @@ HubV2.PersonalMint.handlerWithLoader({
 });
 
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
-  let profileMetadata: { cidV0: string; data: Profile | null } | null = null;
+  let profileMetadata: { cidV0: string | null; data: Profile | null } | null = null;
   try {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
     );
-  } catch (_) {
-    console.log("Error in nameReg fetching Ipfs", _);
-  }
+  } catch (_) {}
 
   const avatar = await context.Avatar.get(event.params.avatar);
 
@@ -228,7 +226,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       id: event.params.avatar,
       avatarType: "Unknown",
       tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
-      cidV0: profileMetadata?.cidV0,
+      cidV0: profileMetadata?.cidV0 ?? undefined,
       profile_id: event.params.avatar,
     });
   } else {
@@ -239,7 +237,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
     context.Avatar.set({
       ...avatar,
       avatarType: transitiveType,
-      cidV0: profileMetadata?.cidV0,
+      cidV0: profileMetadata?.cidV0 ?? undefined,
     });
   }
 

@@ -12,7 +12,8 @@ A unified view of all transfer transactions within the system, consolidating bot
   - `transactionHash`
   - `version`
   - `operator` (v2 only)
-  - `from`, `to`
+  - `from`
+  - `to`
   - `id`
   - `value`
   - `type` (transaction type; e.g., `Erc20WrapperTransfer`, `TransferSingle`, etc.)
@@ -26,16 +27,16 @@ It's possible to get demurrages that happened during transfers or mints.
 query getUserTransfers($address: String) {
 	Transfer(
     where:{
-      to:{_eq:$address},
-      transferType:{_neq:"Demurrage"}
+      to: {_eq:$address},
+      transferType: {_neq:"Demurrage"}
     }
-    order_by:{timestamp: desc}
+    order_by: {timestamp: desc}
   ) {
     id
-    from
+    from { id }
+    to { id }
     transferType
     timestamp
-    to
     value
     demurrageFrom {
       id
@@ -215,8 +216,10 @@ Defines the type of avatars.
   - `Invite`: v2 user that is not yet on circles and has at least one invite.
   - `RegisterGroup`: v2 group.
   - `RegisterOrganization`: v2 organization.
-  - `Unknown`: Placeholder during processing; unlikely to occur in steady state.
   - `Migrating`: v1 user that is migrating to v2.
+  - `Unknown`: Pending state.
+
+The `Unknown` pending state happens when a user created a v2 profile, but did not yet receive an invite or joined circles. Once the user receives de first invite, then the avatar type is `Invite`.
 
 Suppose you want to get the list of invited users by a given user.
 

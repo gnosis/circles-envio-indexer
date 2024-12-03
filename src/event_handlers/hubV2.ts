@@ -305,7 +305,7 @@ HubV2.StreamCompleted.handlerWithLoader({
       transferType: "StreamCompleted",
       version: 2,
       isPartOfStreamOrHub: false,
-      // same as in transfer, there should be only one demmu
+      // same as in transfer, there should be only one demmurage
       demurrageFrom_id: demurrageFrom[0]?.id,
       demurrageTo_id: demurrageTo[0]?.id,
     });
@@ -370,17 +370,17 @@ HubV2.DiscountCost.handlerWithLoader({
 
     return {
       avatarBalance,
-      demurrageTransfer: transfers.filter(
-        (t) => t.to === zeroAddress && t.from === event.params.account
-      ),
+      demurrageTransfer: transfers
+        .sort((a, b) => a.logIndex - b.logIndex)
+        .filter((t) => t.to === zeroAddress && t.from === event.params.account)
+        .at(-1),
     };
   },
   handler: async ({ event, context, loaderReturn }) => {
     const { avatarBalance, demurrageTransfer } = loaderReturn;
-    if (demurrageTransfer.length > 0) {
-      // to each user, only one demurrage is applied
+    if (demurrageTransfer) {
       context.Transfer.set({
-        ...demurrageTransfer[0],
+        ...demurrageTransfer,
         transferType: "Demurrage",
       });
     }

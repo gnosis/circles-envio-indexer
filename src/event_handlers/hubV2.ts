@@ -268,10 +268,10 @@ HubV2.StreamCompleted.handlerWithLoader({
     return {
       transfers,
       demurrageFrom: transfers.filter(
-        (t) => t.to_id === zeroAddress && t.from_id === event.params.from
+        (t) => t.to === zeroAddress && t.from === event.params.from
       ),
       demurrageTo: transfers.filter(
-        (t) => t.to_id === zeroAddress && t.from_id === event.params.to
+        (t) => t.to === zeroAddress && t.from === event.params.to
       ),
     };
   },
@@ -293,8 +293,8 @@ HubV2.StreamCompleted.handlerWithLoader({
       transactionIndex: event.transaction.transactionIndex,
       transactionHash: event.transaction.hash,
       logIndex: event.logIndex,
-      from_id: event.params.from,
-      to_id: event.params.to,
+      from: event.params.from,
+      to: event.params.to,
       operator: undefined,
       value: event.params.amounts.reduce((a, b) => a + b, 0n),
       // TODO: fix - this isn't always true, since it can be multiple tokens
@@ -320,7 +320,7 @@ HubV2.TransferSingle.handlerWithLoader({
     return {
       avatar,
       demurrageTransfer: transfers.filter(
-        (t) => t.to_id === zeroAddress && t.from_id === event.params.to
+        (t) => t.to === zeroAddress && t.from === event.params.to
       ),
     };
   },
@@ -370,7 +370,7 @@ HubV2.DiscountCost.handlerWithLoader({
       avatarBalance,
       demurrageTransfer: transfers
         .sort((a, b) => a.logIndex - b.logIndex)
-        .filter((t) => t.to_id === zeroAddress && t.from_id === event.params.account)
+        .filter((t) => t.to === zeroAddress && t.from === event.params.account)
         .at(-1),
     };
   },

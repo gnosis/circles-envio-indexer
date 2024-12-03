@@ -37,8 +37,8 @@ type Transfer {
   version: Int!
   # only for v2
   operator: String
-  from: Avatar!
-  to: Avatar!
+  from: String!
+  to: String!
   value: BigInt!
   # transaction type; either: Erc20WrapperTransfer | TransferSingle | TransferBatch | StreamCompleted | HubTransfer | Transfer
   transferType: TransferType!

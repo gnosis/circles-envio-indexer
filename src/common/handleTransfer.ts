@@ -102,6 +102,7 @@ export const handleTransfer = async ({
       isPartOfStreamOrHub: false,
       demurrageFrom_id: demurrageTransferId,
       demurrageTo_id: undefined,
+      metriFee_id: undefined,
     };
     context.Transfer.set(transferEntity);
 

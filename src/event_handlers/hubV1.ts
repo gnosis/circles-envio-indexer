@@ -140,6 +140,7 @@ Hub.HubTransfer.handlerWithLoader({
       isPartOfStreamOrHub: false,
       demurrageFrom_id: undefined,
       demurrageTo_id: undefined,
+      metriFee_id: undefined,
     });
   },
 });

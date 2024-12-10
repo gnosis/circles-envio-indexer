@@ -12,6 +12,7 @@ import { defaultAvatarProps, makeAvatarBalanceEntityId } from "../utils";
 import { Profile } from "../types";
 import { handleTransfer } from "../common/handleTransfer";
 import { getProfileMetadataFromIpfs } from "../ipfs";
+import { METRI_FEE_SAFE_ADDRESS } from "../constants";
 
 // ###############
 // #### TOKEN ####
@@ -209,7 +210,8 @@ HubV2.PersonalMint.handlerWithLoader({
 });
 
 NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
-  let profileMetadata: { cidV0: string | null; data: Profile | null } | null = null;
+  let profileMetadata: { cidV0: string | null; data: Profile | null } | null =
+    null;
   try {
     profileMetadata = await getProfileMetadataFromIpfs(
       event.params.metadataDigest
@@ -273,10 +275,11 @@ HubV2.StreamCompleted.handlerWithLoader({
       demurrageTo: transfers.filter(
         (t) => t.to === zeroAddress && t.from === event.params.to
       ),
+      metriFee: transfers.filter((t) => t.transferType === "MetriFee"),
     };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { transfers, demurrageFrom, demurrageTo } = loaderReturn;
+    const { transfers, demurrageFrom, demurrageTo, metriFee } = loaderReturn;
 
     for (let i = 0; i < transfers.length; i++) {
       context.Transfer.set({
@@ -306,6 +309,7 @@ HubV2.StreamCompleted.handlerWithLoader({
       // same as in transfer, there should be only one demmurage
       demurrageFrom_id: demurrageFrom[0]?.id,
       demurrageTo_id: demurrageTo[0]?.id,
+      metriFee_id: metriFee[0]?.id,
     });
   },
 });
@@ -322,17 +326,29 @@ HubV2.TransferSingle.handlerWithLoader({
       demurrageTransfer: transfers.filter(
         (t) => t.to === zeroAddress && t.from === event.params.to
       ),
+      personalMint: transfers.filter((t) => t.transferType === "PersonalMint"),
     };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatar, demurrageTransfer } = loaderReturn;
+    const { avatar, demurrageTransfer, personalMint } = loaderReturn;
+
+    if (personalMint.length > 0) {
+      context.Transfer.set({
+        ...personalMint[0],
+        metriFee_id: `${event.transaction.hash}-${event.logIndex}`,
+      });
+    }
+
     await handleTransfer({
       event,
       context,
       operator: event.params.operator,
       values: [event.params.value],
       tokens: [event.params.id.toString()],
-      transferType: "TransferSingle",
+      transferType:
+        event.params.to === METRI_FEE_SAFE_ADDRESS
+          ? "MetriFee"
+          : "TransferSingle",
       avatarType: avatar?.avatarType ?? "Unknown",
       version: 2,
       demurrageTransferId:

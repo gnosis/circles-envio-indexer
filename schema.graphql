@@ -21,6 +21,7 @@ enum TransferType {
   GroupRedeem
   GroupRedeemCollateralReturn
   GroupRedeemCollateralBurn
+  MetriFee
 }
 
 type Transfer {
@@ -48,6 +49,7 @@ type Transfer {
   # demurrage can be applied both to sender and receiver
   demurrageFrom: Transfer
   demurrageTo: Transfer
+  metriFee: Transfer
 }
 
 type TrustRelation {

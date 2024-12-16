@@ -153,7 +153,9 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
   } else {
     context.Avatar.set({
       ...avatar,
+      version: 2,
       avatarType: "RegisterGroup",
+      tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
       blockNumber: event.block.number,
       timestamp: event.block.timestamp,
       transactionHash: event.transaction.hash,

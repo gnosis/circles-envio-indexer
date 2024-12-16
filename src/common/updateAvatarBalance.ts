@@ -27,7 +27,7 @@ export const updateAvatarBalance = async (
       avatar_id: avatarId,
       token_id: tokenId,
       balance: amount,
-      computedValue: 0n,
+      computedValue: amount,
       lastCalculated: blockTimestamp,
     });
   }

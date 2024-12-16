@@ -67,9 +67,10 @@ contracts:
       - event: DepositInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
       - event: WithdrawInflationary(address indexed account, uint256 amount, uint256 demurragedAmount)
   - name: SafeAccount
-    handler: src/event_handlers/hubV2.ts
+    handler: src/event_handlers/safeAccount.ts
     events:
       - event: ExecutionSuccess(bytes32 txHash, uint256 payment)
+      # - event: UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)
 
 networks:
   # - id: 10200

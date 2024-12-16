@@ -38,11 +38,16 @@ Hub.Signup.handlerWithLoader({
       event.params.token
     );
     const avatarBalance = await context.AvatarBalance.get(balanceId);
+    const avatar = await context.Avatar.get(event.params.user);
 
-    return { avatarBalance };
+    return { avatarBalance, avatar };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatarBalance } = loaderReturn;
+    const { avatarBalance, avatar } = loaderReturn;
+
+    if (avatar && avatar.version !== 1) {
+      return;
+    }
 
     const profileFromGarden = await getProfileMetadataFromGardenApi(
       event.params.user

@@ -70,7 +70,7 @@ Hub.Signup.handlerWithLoader({
       version: 1,
       id: event.params.user,
       avatarType: "Signup",
-      tokenId: event.params.token,
+      token_id: event.params.token,
       profile_id: event.params.user,
       balance: avatarBalance?.balance || 0n,
     });
@@ -85,6 +85,7 @@ Hub.Signup.handlerWithLoader({
       version: 1,
       tokenType: "Signup",
       tokenOwner_id: event.params.user,
+      totalSupply: 0n,
     });
 
     await incrementStats(context, "signups");

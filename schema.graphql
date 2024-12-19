@@ -105,7 +105,7 @@ type Avatar {
   avatarType: AvatarType!
   invitedBy: String
   # v1 token address or equal to avatar address if v2
-  tokenId: String
+  token: Token
   # v2 wrapped token id
   wrappedTokenId: String
   # IPFS CID of the avatar's profile
@@ -158,4 +158,5 @@ type Token {
   version: Int!
   tokenType: TokenType!
   tokenOwner: Avatar!
+  totalSupply: BigInt!
 }

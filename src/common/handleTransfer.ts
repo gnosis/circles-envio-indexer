@@ -15,7 +15,7 @@ import {
   TransferType_t,
 } from "generated/src/db/Enums.gen";
 import { updateAvatarBalance } from "./updateAvatarBalance";
-import { getAddress, toHex } from "viem";
+import { getAddress, toHex, zeroAddress } from "viem";
 
 const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
   switch (avatarType) {
@@ -71,6 +71,14 @@ export const handleTransfer = async ({
           tokenOwner_id = event.params.to;
         }
       }
+      let totalSupply = 0n;
+      if (
+        (transferType === "Transfer" || transferType === "TransferSingle") &&
+        event.params.from === zeroAddress
+      ) {
+        totalSupply = values[i];
+      }
+
       context.Token.set({
         id: tokens[i],
         blockNumber: event.block.number,
@@ -81,7 +89,24 @@ export const handleTransfer = async ({
         version,
         tokenType: mapAvatarTypeToTokenType(avatarType),
         tokenOwner_id,
+        totalSupply,
       });
+    } else {
+      let totalSupply = 0n;
+      if (transferType === "Transfer" || transferType === "TransferSingle") {
+        if (event.params.from === zeroAddress) {
+          totalSupply += values[i];
+        } else if (event.params.to === zeroAddress) {
+          totalSupply -= values[i];
+        }
+      }
+
+      if (totalSupply !== 0n) {
+        context.Token.set({
+          ...token,
+          totalSupply,
+        });
+      }
     }
 
     const transferEntity: Transfer = {

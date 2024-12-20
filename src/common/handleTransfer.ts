@@ -92,7 +92,7 @@ export const handleTransfer = async ({
         totalSupply,
       });
     } else {
-      let totalSupply = 0n;
+      let totalSupply = token.totalSupply;
       if (transferType === "Transfer" || transferType === "TransferSingle") {
         if (event.params.from === zeroAddress) {
           totalSupply += values[i];

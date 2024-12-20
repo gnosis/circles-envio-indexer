@@ -84,7 +84,6 @@ enum AvatarType {
 type AvatarBalance {
   # id is avatar-token
   id: ID!
-  # token address in v1 and token id in v2
   token: Token!
   avatar: Avatar!
   balance: BigInt!
@@ -104,7 +103,6 @@ type Avatar {
   version: Int!
   avatarType: AvatarType!
   invitedBy: String
-  # v1 token address or equal to avatar address if v2
   token: Token
   # v2 wrapped token id
   wrappedTokenId: String

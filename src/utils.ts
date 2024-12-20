@@ -26,7 +26,7 @@ export function defaultAvatarProps(event: eventLog<any>) {
   return {
     id: "default",
     avatarType: "Unknown",
-    tokenId: undefined,
+    token_id: undefined,
     cidV0: undefined,
     profile_id: undefined,
     version: 0,

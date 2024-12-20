@@ -46,6 +46,7 @@ ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
         ? "WrappedDemurrageToken"
         : "WrappedStaticToken",
     tokenOwner_id: event.params.avatar,
+    totalSupply: 0n,
   });
 });
 
@@ -61,7 +62,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       ...avatar,
       avatarType: "RegisterHuman",
       version: 2,
-      tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+      token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
       trustsGivenCount: 0,
       trustsReceivedCount: 0,
       invitedBy: event.params.inviter,
@@ -72,7 +73,7 @@ HubV2.RegisterHuman.handler(async ({ event, context }) => {
       version: 2,
       id: event.params.avatar,
       avatarType: "RegisterHuman",
-      tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+      token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
       profile_id: event.params.avatar,
       invitedBy: event.params.inviter,
     });
@@ -123,7 +124,7 @@ HubV2.RegisterOrganization.handler(async ({ event, context }) => {
     version: 2,
     id: event.params.organization,
     avatarType: "RegisterOrganization",
-    tokenId: bytesToBigInt(toBytes(event.params.organization)).toString(),
+    token_id: bytesToBigInt(toBytes(event.params.organization)).toString(),
     profile_id: event.params.organization,
   });
 
@@ -147,7 +148,7 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
       version: 2,
       id: event.params.group,
       avatarType: "RegisterGroup",
-      tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
+      token_id: bytesToBigInt(toBytes(event.params.group)).toString(),
       profile_id: event.params.group,
     });
   } else {
@@ -155,7 +156,7 @@ HubV2.RegisterGroup.handler(async ({ event, context }) => {
       ...avatar,
       version: 2,
       avatarType: "RegisterGroup",
-      tokenId: bytesToBigInt(toBytes(event.params.group)).toString(),
+      token_id: bytesToBigInt(toBytes(event.params.group)).toString(),
       blockNumber: event.block.number,
       timestamp: event.block.timestamp,
       transactionHash: event.transaction.hash,
@@ -229,7 +230,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
       version: 2,
       id: event.params.avatar,
       avatarType: "Unknown",
-      tokenId: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+      token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
       cidV0: profileMetadata?.cidV0 ?? undefined,
       profile_id: event.params.avatar,
     });

@@ -54,31 +54,38 @@ ERC20Lift.ERC20WrapperDeployed.handler(async ({ event, context }) => {
 // #### AVATAR ###
 // ###############
 
-HubV2.RegisterHuman.handler(async ({ event, context }) => {
-  const avatar = await context.Avatar.get(event.params.avatar);
-  if (avatar) {
-    // when migrating from v1
-    context.Avatar.set({
-      ...avatar,
-      avatarType: "RegisterHuman",
-      version: 2,
-      token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
-      trustsGivenCount: 0,
-      trustsReceivedCount: 0,
-      invitedBy: event.params.inviter,
-    });
-  } else {
-    context.Avatar.set({
-      ...defaultAvatarProps(event),
-      version: 2,
-      id: event.params.avatar,
-      avatarType: "RegisterHuman",
-      token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
-      profile_id: event.params.avatar,
-      invitedBy: event.params.inviter,
-    });
-    await incrementStats(context, "signups");
-  }
+HubV2.RegisterHuman.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const avatar = await context.Avatar.get(event.params.avatar);
+    return { avatar };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { avatar } = loaderReturn;
+    if (avatar) {
+      // when migrating from v1
+      context.Avatar.set({
+        ...avatar,
+        avatarType: "RegisterHuman",
+        version: 2,
+        token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+        trustsGivenCount: 0,
+        trustsReceivedCount: 0,
+        invitedBy: event.params.inviter,
+        migrated: true,
+      });
+    } else {
+      context.Avatar.set({
+        ...defaultAvatarProps(event),
+        version: 2,
+        id: event.params.avatar,
+        avatarType: "RegisterHuman",
+        token_id: bytesToBigInt(toBytes(event.params.avatar)).toString(),
+        profile_id: event.params.avatar,
+        invitedBy: event.params.inviter,
+      });
+      await incrementStats(context, "signups");
+    }
+  },
 });
 
 HubV2.RegisterHuman.contractRegister(

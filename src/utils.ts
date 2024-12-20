@@ -38,11 +38,11 @@ export function defaultAvatarProps(event: eventLog<any>) {
     logIndex: event.logIndex,
     transactionIndex: event.transaction.transactionIndex,
     wrappedTokenId: undefined,
-    balance: 0n,
     lastMint: undefined,
     trustsGivenCount: 0,
     trustsReceivedCount: 0,
     trustedByN: 0,
     isVerified: false,
+    migrated: false,
   } as Avatar;
 }

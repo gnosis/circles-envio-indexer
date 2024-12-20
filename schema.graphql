@@ -102,6 +102,7 @@ type Avatar {
   transactionHash: String!
   version: Int!
   avatarType: AvatarType!
+  # v2 only invited by
   invitedBy: String
   token: Token
   # v2 wrapped token id
@@ -110,8 +111,6 @@ type Avatar {
   cidV0: String
   # balances of all tokens
   balances: [AvatarBalance!]! @derivedFrom(field: "avatar")
-  # balance of all tokens aggregated
-  balance: BigInt!
   # array of trusts given
   trustsGiven: [TrustRelation!]! @derivedFrom(field: "truster")
   # array of trusts received
@@ -121,10 +120,9 @@ type Avatar {
   # count of trusts received
   trustsReceivedCount: Int!
   lastMint: Int
-  # deprecated! use `trustsReceivedCount` instead
-  trustedByN: Int!
   isVerified: Boolean!
   profile: Profile
+  migrated: Boolean!
 }
 
 type Profile {

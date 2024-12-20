@@ -33,17 +33,12 @@ Hub.OrganizationSignup.handler(async ({ event, context }) => {
 
 Hub.Signup.handlerWithLoader({
   loader: async ({ event, context }) => {
-    const balanceId = makeAvatarBalanceEntityId(
-      event.params.user,
-      event.params.token
-    );
-    const avatarBalance = await context.AvatarBalance.get(balanceId);
     const avatar = await context.Avatar.get(event.params.user);
 
-    return { avatarBalance, avatar };
+    return { avatar };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatarBalance, avatar } = loaderReturn;
+    const { avatar } = loaderReturn;
 
     if (avatar && avatar.version !== 1) {
       return;
@@ -72,7 +67,6 @@ Hub.Signup.handlerWithLoader({
       avatarType: "Signup",
       token_id: event.params.token,
       profile_id: event.params.user,
-      balance: avatarBalance?.balance || 0n,
     });
 
     context.Token.set({

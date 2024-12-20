@@ -460,9 +460,7 @@ HubV2.Trust.handlerWithLoader({
       return;
     }
 
-    const timeDifference =
-      event.params.expiryTime - BigInt(event.block.timestamp);
-    const isUntrust = timeDifference < 3600n;
+    const isUntrust = event.params.expiryTime < 2_000_000_000n;
 
     if (!avatarTrustee) {
       context.Avatar.set({
@@ -521,7 +519,11 @@ HubV2.Trust.handlerWithLoader({
       return;
     }
     const isMutual = oppositeTrustRelation !== undefined;
-    if (isMutual) {
+    if (
+      isMutual &&
+      !oppositeTrustRelation.isMutual &&
+      oppositeTrustRelation.expiryTime !== 0n
+    ) {
       context.TrustRelation.set({
         ...oppositeTrustRelation,
         isMutual: true,
@@ -544,7 +546,7 @@ HubV2.Trust.handlerWithLoader({
 
     context.TrustRelation.set(entity);
 
-    if (trustRelationV1) {
+    if (trustRelationV1 && !trustRelationV1.isMigrated) {
       context.TrustRelation.set({
         ...trustRelationV1,
         isMigrated: true,

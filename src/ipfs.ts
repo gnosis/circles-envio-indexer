@@ -46,8 +46,17 @@ async function fetchFromEndpoint(
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data = (await response.json()) as Profile | undefined;
+    let data = (await response.json()) as Profile | undefined;
     const timeTaken = performance.now() - startTime;
+
+    // remove empty fields, like previewImageUrl with value "" and null
+    if (data) {
+      data = Object.fromEntries(
+        Object.entries(data).filter(
+          ([_, value]) => value !== "" && value !== null
+        )
+      ) as Profile;
+    }
 
     // If there's an avatar URL, validate it
 

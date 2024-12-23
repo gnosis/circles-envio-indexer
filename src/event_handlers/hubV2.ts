@@ -525,12 +525,10 @@ HubV2.Trust.handlerWithLoader({
       }
       return;
     }
-    const isMutual = oppositeTrustRelation !== undefined;
-    if (
-      isMutual &&
-      !oppositeTrustRelation.isMutual &&
-      oppositeTrustRelation.expiryTime !== 0n
-    ) {
+    const isMutual =
+      oppositeTrustRelation !== undefined &&
+      oppositeTrustRelation.expiryTime !== 0n;
+    if (isMutual && !oppositeTrustRelation.isMutual) {
       context.TrustRelation.set({
         ...oppositeTrustRelation,
         isMutual: true,

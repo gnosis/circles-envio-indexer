@@ -97,28 +97,16 @@ HubV2.RegisterHuman.contractRegister(
 
 SafeAccount.ExecutionSuccess.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let transfers = await context.Transfer.getWhere.transactionHash.eq(
-      event.transaction.hash
-    );
+    const transaction = await context.Transaction.get(event.transaction.hash);
 
-    return { transfers };
+    return { transaction };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { transfers } = loaderReturn;
+    const { transaction } = loaderReturn;
 
-    const transfer = transfers.find(
-      (t) =>
-        t.transferType === "StreamCompleted" ||
-        t.transferType === "PersonalMint"
-    );
-    if (transfer) {
-      context.Transfer.set({
-        ...transfer,
-        safeTxHash: event.params.txHash,
-      });
-    } else if (transfers.length > 0) {
-      context.Transfer.set({
-        ...transfers[0],
+    if (transaction) {
+      context.Transaction.set({
+        ...transaction,
         safeTxHash: event.params.txHash,
       });
     }
@@ -192,7 +180,7 @@ HubV2.PersonalMint.handlerWithLoader({
   loader: async ({ event, context }) => {
     const [avatar, transfers] = await Promise.all([
       context.Avatar.get(event.params.human),
-      context.Transfer.getWhere.transactionHash.eq(event.transaction.hash),
+      context.Transfer.getWhere.transaction_id.eq(event.transaction.hash),
     ]);
 
     return {
@@ -273,23 +261,14 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
 
 HubV2.StreamCompleted.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let transfers = await context.Transfer.getWhere.transactionHash.eq(
+    let transfers = await context.Transfer.getWhere.transaction_id.eq(
       event.transaction.hash
     );
 
-    return {
-      transfers,
-      demurrageFrom: transfers.filter(
-        (t) => t.to === zeroAddress && t.from === event.params.from
-      ),
-      demurrageTo: transfers.filter(
-        (t) => t.to === zeroAddress && t.from === event.params.to
-      ),
-      metriFee: transfers.filter((t) => t.transferType === "MetriFee"),
-    };
+    return { transfers };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { transfers, demurrageFrom, demurrageTo, metriFee } = loaderReturn;
+    const { transfers } = loaderReturn;
 
     for (let i = 0; i < transfers.length; i++) {
       context.Transfer.set({
@@ -300,11 +279,7 @@ HubV2.StreamCompleted.handlerWithLoader({
 
     context.Transfer.set({
       id: `${event.transaction.hash}-stream`,
-      safeTxHash: undefined,
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionIndex: event.transaction.transactionIndex,
-      transactionHash: event.transaction.hash,
+      transaction_id: event.transaction.hash,
       logIndex: event.logIndex,
       from: event.params.from,
       to: event.params.to,
@@ -316,38 +291,18 @@ HubV2.StreamCompleted.handlerWithLoader({
       transferType: "StreamCompleted",
       version: 2,
       isPartOfStreamOrHub: false,
-      // same as in transfer, there should be only one demmurage
-      demurrageFrom_id: demurrageFrom[0]?.id,
-      demurrageTo_id: demurrageTo[0]?.id,
-      metriFee_id: metriFee[0]?.id,
     });
   },
 });
 
 HubV2.TransferSingle.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let avatar = await context.Avatar.get(event.params.to);
-    const transfers = await context.Transfer.getWhere.transactionHash.eq(
-      event.transaction.hash
-    );
+    const avatar = await context.Avatar.get(event.params.to);
 
-    return {
-      avatar,
-      demurrageTransfer: transfers.filter(
-        (t) => t.to === zeroAddress && t.from === event.params.to
-      ),
-      personalMint: transfers.filter((t) => t.transferType === "PersonalMint"),
-    };
+    return { avatar };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatar, demurrageTransfer, personalMint } = loaderReturn;
-
-    if (personalMint.length > 0) {
-      context.Transfer.set({
-        ...personalMint[0],
-        metriFee_id: `${event.transaction.hash}-${event.logIndex}`,
-      });
-    }
+    const { avatar } = loaderReturn;
 
     await handleTransfer({
       event,
@@ -361,8 +316,6 @@ HubV2.TransferSingle.handlerWithLoader({
           : "TransferSingle",
       avatarType: avatar?.avatarType ?? "Unknown",
       version: 2,
-      demurrageTransferId:
-        demurrageTransfer.length > 0 ? demurrageTransfer[0].id : undefined,
     });
   },
 });
@@ -388,7 +341,7 @@ HubV2.DiscountCost.handlerWithLoader({
       event.params.id.toString()
     );
     const avatarBalance = await context.AvatarBalance.get(avatarBalanceId);
-    const transfers = await context.Transfer.getWhere.transactionHash.eq(
+    const transfers = await context.Transfer.getWhere.transaction_id.eq(
       event.transaction.hash
     );
 

@@ -17,6 +17,7 @@ import {
 import { updateAvatarBalance } from "./updateAvatarBalance";
 import { getAddress, toHex, zeroAddress } from "viem";
 import { makeAvatarBalanceEntityId } from "../utils";
+import { id, Token_t } from "generated/src/db/Entities.gen";
 
 const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
   switch (avatarType) {
@@ -33,9 +34,8 @@ const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
 export const handleTransfer = async ({
   event,
   context,
-  operator,
-  values,
   tokens,
+  values,
   transferType,
   avatarType,
   version,
@@ -49,25 +49,25 @@ export const handleTransfer = async ({
     | WrappedERC20_Transfer_eventArgs
   >;
   context: handlerContext;
-  operator: string | undefined;
+  tokens: (Token_t | { id: id })[];
   values: bigint[];
-  tokens: string[];
   transferType: TransferType_t;
   avatarType: AvatarType_t;
   version: number;
   demurrageTransferId?: string | undefined;
 }) => {
   for (let i = 0; i < tokens.length; i++) {
-    const token = await context.Token.get(tokens[i]);
-    if (!token) {
+    // const token = await context.Token.get(tokens[i]);
+    const token = tokens[i];
+    if (!('totalSupply' in token)) {
       let tokenOwner_id: string;
       try {
-        tokenOwner_id = tokens[i].startsWith("0x")
+        tokenOwner_id = token.id.startsWith("0x")
           ? event.params.to
-          : getAddress(`0x${BigInt(tokens[i]).toString(16).padStart(40, "0")}`);
+          : getAddress(`0x${BigInt(token.id).toString(16).padStart(40, "0")}`);
       } catch (_) {
         try {
-          tokenOwner_id = getAddress(toHex(BigInt(tokens[i])));
+          tokenOwner_id = getAddress(toHex(BigInt(token.id)));
         } catch (_) {
           tokenOwner_id = event.params.to;
         }
@@ -81,7 +81,7 @@ export const handleTransfer = async ({
       }
 
       context.Token.set({
-        id: tokens[i],
+        id: token.id,
         blockNumber: event.block.number,
         timestamp: event.block.timestamp,
         transactionIndex: event.transaction.transactionIndex,
@@ -120,9 +120,9 @@ export const handleTransfer = async ({
       logIndex: event.logIndex,
       from: event.params.from,
       to: event.params.to,
-      operator,
+      operator: 'operator' in event.params ? event.params.operator : undefined,
       value: values[i],
-      token: tokens[i],
+      token: token.id,
       transferType,
       version,
       isPartOfStreamOrHub: false,
@@ -134,13 +134,13 @@ export const handleTransfer = async ({
 
     const avatarBalanceIdTo = makeAvatarBalanceEntityId(
       event.params.to,
-      tokens[i]
+      token.id
     );
     const avatarBalanceTo = (await context.AvatarBalance.get(
       avatarBalanceIdTo
     )) ?? {
       avatar_id: event.params.to,
-      token_id: tokens[i],
+      token_id: token.id,
     };
 
     updateAvatarBalance(
@@ -152,13 +152,13 @@ export const handleTransfer = async ({
 
     const avatarBalanceIdFrom = makeAvatarBalanceEntityId(
       event.params.from,
-      tokens[i]
+      token.id
     );
     const avatarBalanceFrom = (await context.AvatarBalance.get(
       avatarBalanceIdFrom
     )) ?? {
       avatar_id: event.params.from,
-      token_id: tokens[i],
+      token_id: token.id,
     };
     updateAvatarBalance(
       avatarBalanceFrom,

@@ -90,19 +90,28 @@ Hub.Signup.handlerWithLoader({
 // ## TRANSFERS ##
 // ###############
 
-PersonalCRC.Transfer.handler(
-  async ({ event, context }) =>
+PersonalCRC.Transfer.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const token = (await context.Token.get(event.srcAddress)) ?? {
+      id: event.srcAddress,
+    };
+    return {
+      token,
+    };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { token } = loaderReturn;
     await handleTransfer({
       event,
       context,
-      operator: undefined,
+      tokens: [token],
       values: [event.params.amount],
-      tokens: [event.srcAddress],
       transferType: "Transfer",
       avatarType: "Signup",
       version: 1,
-    })
-);
+    });
+  },
+});
 
 Hub.HubTransfer.handlerWithLoader({
   loader: async ({ event, context }) => {

@@ -273,7 +273,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
 
 HubV2.StreamCompleted.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let transfers = await context.Transfer.getWhere.transactionHash.eq(
+    const transfers = await context.Transfer.getWhere.transactionHash.eq(
       event.transaction.hash
     );
 
@@ -326,10 +326,13 @@ HubV2.StreamCompleted.handlerWithLoader({
 
 HubV2.TransferSingle.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let avatar = await context.Avatar.get(event.params.to);
-    const transfers = await context.Transfer.getWhere.transactionHash.eq(
-      event.transaction.hash
-    );
+    const [avatar, transfers, tokenOrNull] = await Promise.all([
+      context.Avatar.get(event.params.to),
+      context.Transfer.getWhere.transactionHash.eq(event.transaction.hash),
+      context.Token.get(event.params.id.toString())
+    ]);
+
+    const token = tokenOrNull || { id: event.params.id.toString() };
 
     return {
       avatar,
@@ -337,10 +340,11 @@ HubV2.TransferSingle.handlerWithLoader({
         (t) => t.to === zeroAddress && t.from === event.params.to
       ),
       personalMint: transfers.filter((t) => t.transferType === "PersonalMint"),
+      token,
     };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatar, demurrageTransfer, personalMint } = loaderReturn;
+    const { avatar, demurrageTransfer, personalMint, token } = loaderReturn;
 
     if (personalMint.length > 0) {
       context.Transfer.set({
@@ -352,9 +356,8 @@ HubV2.TransferSingle.handlerWithLoader({
     await handleTransfer({
       event,
       context,
-      operator: event.params.operator,
+      tokens: [token],
       values: [event.params.value],
-      tokens: [event.params.id.toString()],
       transferType:
         event.params.to === METRI_FEE_SAFE_ADDRESS
           ? "MetriFee"
@@ -367,19 +370,32 @@ HubV2.TransferSingle.handlerWithLoader({
   },
 });
 
-HubV2.TransferBatch.handler(
-  async ({ event, context }) =>
+HubV2.TransferBatch.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const tokens = await Promise.all(
+      event.params.ids.map(
+        async (id) =>
+          (await context.Token.get(id.toString())) ?? { id: id.toString() }
+      )
+    );
+
+    return {
+      tokens,
+    };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { tokens } = loaderReturn;
     await handleTransfer({
       event,
       context,
-      operator: event.params.operator,
+      tokens,
       values: event.params.values,
-      tokens: event.params.ids.map((id) => id.toString()),
-      transferType: "TransferSingle",
+      transferType: "TransferBatch",
       avatarType: "Unknown",
       version: 2,
-    })
-);
+    });
+  },
+});
 
 HubV2.DiscountCost.handlerWithLoader({
   loader: async ({ event, context }) => {

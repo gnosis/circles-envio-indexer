@@ -12,18 +12,20 @@ import { makeAvatarBalanceEntityId } from "../utils";
 
 WrappedERC20.Transfer.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let avatar = await context.Avatar.get(event.params.to);
-
-    return { avatar };
+    const [avatar, tokenOrNull] = await Promise.all([
+      context.Avatar.get(event.params.to),
+      context.Token.get(event.srcAddress)
+    ]);
+    const token = tokenOrNull ?? { id: event.srcAddress };
+    return { avatar, token };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatar } = loaderReturn;
+    const { avatar, token } = loaderReturn;
     await handleTransfer({
       event,
       context,
-      operator: undefined,
+      tokens: [token],
       values: [event.params.value],
-      tokens: [event.srcAddress],
       transferType: "Erc20WrapperTransfer",
       avatarType: avatar?.avatarType ?? "Unknown",
       version: 2,

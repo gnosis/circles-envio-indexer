@@ -16,6 +16,7 @@ import {
 } from "generated/src/db/Enums.gen";
 import { updateAvatarBalance } from "./updateAvatarBalance";
 import { getAddress, toHex, zeroAddress } from "viem";
+import { makeAvatarBalanceEntityId } from "../utils";
 
 const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
   switch (avatarType) {
@@ -131,14 +132,41 @@ export const handleTransfer = async ({
     };
     context.Transfer.set(transferEntity);
 
-    await updateAvatarBalance(context, values[i], event.block.timestamp, {
-      id: event.params.to,
+    const avatarBalanceIdTo = makeAvatarBalanceEntityId(
+      event.params.to,
+      tokens[i]
+    );
+    const avatarBalanceTo = (await context.AvatarBalance.get(
+      avatarBalanceIdTo
+    )) ?? {
+      avatar_id: event.params.to,
       token_id: tokens[i],
-    });
-    await updateAvatarBalance(context, -values[i], event.block.timestamp, {
-      id: event.params.from,
+    };
+
+    updateAvatarBalance(
+      avatarBalanceTo,
+      context,
+      values[i],
+      event.block.timestamp
+    );
+
+    const avatarBalanceIdFrom = makeAvatarBalanceEntityId(
+      event.params.from,
+      tokens[i]
+    );
+    const avatarBalanceFrom = (await context.AvatarBalance.get(
+      avatarBalanceIdFrom
+    )) ?? {
+      avatar_id: event.params.from,
       token_id: tokens[i],
-    });
+    };
+    updateAvatarBalance(
+      avatarBalanceFrom,
+      context,
+      -values[i],
+      event.block.timestamp
+    );
+
     await incrementStats(context, "transfers");
   }
 };

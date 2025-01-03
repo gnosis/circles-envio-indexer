@@ -13,6 +13,7 @@ import { Profile } from "../types";
 import { handleTransfer } from "../common/handleTransfer";
 import { getProfileMetadataFromIpfs } from "../ipfs";
 import { METRI_FEE_SAFE_ADDRESS } from "../constants";
+import { AvatarBalance_t, Token_t } from "generated/src/db/Entities.gen";
 
 // ###############
 // #### TOKEN ####
@@ -326,13 +327,39 @@ HubV2.StreamCompleted.handlerWithLoader({
 
 HubV2.TransferSingle.handlerWithLoader({
   loader: async ({ event, context }) => {
-    const [avatar, transfers, tokenOrNull] = await Promise.all([
+    const tokenId = event.params.id.toString();
+    const avatarBalanceIdTo = makeAvatarBalanceEntityId(
+      event.params.to,
+      tokenId
+    );
+    const avatarBalanceIdFrom = makeAvatarBalanceEntityId(
+      event.params.from,
+      tokenId
+    );
+    const [
+      avatar,
+      transfers,
+      tokenOrNull,
+      avatarBalanceToOrNull,
+      avatarBalanceFromOrNull,
+    ] = await Promise.all([
       context.Avatar.get(event.params.to),
       context.Transfer.getWhere.transactionHash.eq(event.transaction.hash),
-      context.Token.get(event.params.id.toString())
+      context.Token.get(tokenId),
+      context.AvatarBalance.get(avatarBalanceIdTo),
+      context.AvatarBalance.get(avatarBalanceIdFrom),
     ]);
 
-    const token = tokenOrNull || { id: event.params.id.toString() };
+    const token = tokenOrNull || { id: tokenId };
+    const avatarBalanceTo = avatarBalanceToOrNull || {
+      avatar_id: event.params.to,
+      token_id: tokenId,
+    };
+
+    const avatarBalanceFrom = avatarBalanceFromOrNull || {
+      avatar_id: event.params.from,
+      token_id: tokenId,
+    };
 
     return {
       avatar,
@@ -341,10 +368,12 @@ HubV2.TransferSingle.handlerWithLoader({
       ),
       personalMint: transfers.filter((t) => t.transferType === "PersonalMint"),
       token,
+      avatarsBalance: [{ to: avatarBalanceTo, from: avatarBalanceFrom }],
     };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { avatar, demurrageTransfer, personalMint, token } = loaderReturn;
+    const { avatar, demurrageTransfer, personalMint, token, avatarsBalance } =
+      loaderReturn;
 
     if (personalMint.length > 0) {
       context.Transfer.set({
@@ -353,9 +382,10 @@ HubV2.TransferSingle.handlerWithLoader({
       });
     }
 
-    await handleTransfer({
+    handleTransfer({
       event,
       context,
+      avatarsBalance,
       tokens: [token],
       values: [event.params.value],
       transferType:
@@ -372,22 +402,54 @@ HubV2.TransferSingle.handlerWithLoader({
 
 HubV2.TransferBatch.handlerWithLoader({
   loader: async ({ event, context }) => {
-    const tokens = await Promise.all(
-      event.params.ids.map(
-        async (id) =>
-          (await context.Token.get(id.toString())) ?? { id: id.toString() }
-      )
-    );
+    const tokenIds = event.params.ids.map((id) => id.toString());
+
+    // flatten all promises into a single array
+    const allPromises = [
+      ...tokenIds.map((id) => context.Token.get(id)),
+      ...tokenIds.flatMap((tokenId) => [
+        context.AvatarBalance.get(
+          makeAvatarBalanceEntityId(event.params.to, tokenId)
+        ),
+        context.AvatarBalance.get(
+          makeAvatarBalanceEntityId(event.params.from, tokenId)
+        ),
+      ]),
+    ];
+
+    const allResults = await Promise.all(allPromises);
+
+    const tokens = allResults.slice(0, tokenIds.length) as (
+      | Token_t
+      | { id: string }
+    )[];
+    const allAvatarBalances = allResults.slice(tokenIds.length) as (
+      | AvatarBalance_t
+      | { avatar_id: string; token_id: string }
+    )[];
+
+    const avatarsBalance = tokenIds.map((tokenId, i) => ({
+      to: allAvatarBalances[i * 2] ?? {
+        avatar_id: event.params.to,
+        token_id: tokenId,
+      },
+      from: allAvatarBalances[i * 2 + 1] ?? {
+        avatar_id: event.params.from,
+        token_id: tokenId,
+      },
+    }));
 
     return {
       tokens,
+      avatarsBalance,
     };
   },
   handler: async ({ event, context, loaderReturn }) => {
-    const { tokens } = loaderReturn;
-    await handleTransfer({
+    const { tokens, avatarsBalance } = loaderReturn;
+    handleTransfer({
       event,
       context,
+      avatarsBalance,
       tokens,
       values: event.params.values,
       transferType: "TransferBatch",

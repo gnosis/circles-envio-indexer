@@ -8,7 +8,6 @@ import {
   HubV2_TransferBatch_eventArgs,
   WrappedERC20_Transfer_eventArgs,
 } from "generated";
-import { incrementStats } from "../incrementStats";
 import {
   AvatarType_t,
   TokenType_t,
@@ -16,8 +15,7 @@ import {
 } from "generated/src/db/Enums.gen";
 import { updateAvatarBalance } from "./updateAvatarBalance";
 import { getAddress, toHex, zeroAddress } from "viem";
-import { makeAvatarBalanceEntityId } from "../utils";
-import { id, Token_t } from "generated/src/db/Entities.gen";
+import { AvatarBalance_t, id, Token_t } from "generated/src/db/Entities.gen";
 
 const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
   switch (avatarType) {
@@ -31,9 +29,10 @@ const mapAvatarTypeToTokenType = (avatarType: AvatarType_t): TokenType_t => {
   }
 };
 
-export const handleTransfer = async ({
+export const handleTransfer = ({
   event,
   context,
+  avatarsBalance,
   tokens,
   values,
   transferType,
@@ -49,6 +48,10 @@ export const handleTransfer = async ({
     | WrappedERC20_Transfer_eventArgs
   >;
   context: handlerContext;
+  avatarsBalance: {
+    from: AvatarBalance_t | { avatar_id: string; token_id: string };
+    to: AvatarBalance_t | { avatar_id: string; token_id: string };
+  }[];
   tokens: (Token_t | { id: id })[];
   values: bigint[];
   transferType: TransferType_t;
@@ -57,9 +60,8 @@ export const handleTransfer = async ({
   demurrageTransferId?: string | undefined;
 }) => {
   for (let i = 0; i < tokens.length; i++) {
-    // const token = await context.Token.get(tokens[i]);
     const token = tokens[i];
-    if (!('totalSupply' in token)) {
+    if (!("totalSupply" in token)) {
       let tokenOwner_id: string;
       try {
         tokenOwner_id = token.id.startsWith("0x")
@@ -120,7 +122,7 @@ export const handleTransfer = async ({
       logIndex: event.logIndex,
       from: event.params.from,
       to: event.params.to,
-      operator: 'operator' in event.params ? event.params.operator : undefined,
+      operator: "operator" in event.params ? event.params.operator : undefined,
       value: values[i],
       token: token.id,
       transferType,
@@ -132,41 +134,17 @@ export const handleTransfer = async ({
     };
     context.Transfer.set(transferEntity);
 
-    const avatarBalanceIdTo = makeAvatarBalanceEntityId(
-      event.params.to,
-      token.id
-    );
-    const avatarBalanceTo = (await context.AvatarBalance.get(
-      avatarBalanceIdTo
-    )) ?? {
-      avatar_id: event.params.to,
-      token_id: token.id,
-    };
-
     updateAvatarBalance(
-      avatarBalanceTo,
+      avatarsBalance[i].to,
       context,
       values[i],
       event.block.timestamp
     );
-
-    const avatarBalanceIdFrom = makeAvatarBalanceEntityId(
-      event.params.from,
-      token.id
-    );
-    const avatarBalanceFrom = (await context.AvatarBalance.get(
-      avatarBalanceIdFrom
-    )) ?? {
-      avatar_id: event.params.from,
-      token_id: token.id,
-    };
     updateAvatarBalance(
-      avatarBalanceFrom,
+      avatarsBalance[i].from,
       context,
       -values[i],
       event.block.timestamp
     );
-
-    await incrementStats(context, "transfers");
   }
 };

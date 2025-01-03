@@ -90,19 +90,56 @@ Hub.Signup.handlerWithLoader({
 // ## TRANSFERS ##
 // ###############
 
-PersonalCRC.Transfer.handler(
-  async ({ event, context }) =>
-    await handleTransfer({
+PersonalCRC.Transfer.handlerWithLoader({
+  loader: async ({ event, context }) => {
+    const tokenId = event.srcAddress;
+    const avatarBalanceIdTo = makeAvatarBalanceEntityId(
+      event.params.to,
+      tokenId
+    );
+    const avatarBalanceIdFrom = makeAvatarBalanceEntityId(
+      event.params.from,
+      tokenId
+    );
+
+    const [tokenOrNull, avatarBalanceToOrNull, avatarBalanceFromOrNull] =
+      await Promise.all([
+        context.Token.get(tokenId),
+        context.AvatarBalance.get(avatarBalanceIdTo),
+        context.AvatarBalance.get(avatarBalanceIdFrom),
+      ]);
+
+    const token = tokenOrNull ?? {
+      id: tokenId,
+    };
+    const avatarBalanceTo = avatarBalanceToOrNull ?? {
+      avatar_id: event.params.to,
+      token_id: tokenId,
+    };
+
+    const avatarBalanceFrom = avatarBalanceFromOrNull ?? {
+      avatar_id: event.params.from,
+      token_id: tokenId,
+    };
+    return {
+      token,
+      avatarsBalance: [{ to: avatarBalanceTo, from: avatarBalanceFrom }],
+    };
+  },
+  handler: async ({ event, context, loaderReturn }) => {
+    const { token, avatarsBalance } = loaderReturn;
+    handleTransfer({
       event,
       context,
-      operator: undefined,
+      avatarsBalance,
+      tokens: [token],
       values: [event.params.amount],
-      tokens: [event.srcAddress],
       transferType: "Transfer",
       avatarType: "Signup",
       version: 1,
-    })
-);
+    });
+  },
+});
 
 Hub.HubTransfer.handlerWithLoader({
   loader: async ({ event, context }) => {

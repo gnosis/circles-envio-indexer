@@ -3,7 +3,6 @@ import {
   HubV2,
   TrustRelation,
   NameRegistry,
-  SafeAccount,
   Avatar,
 } from "generated";
 import { toBytes, bytesToBigInt, parseEther, zeroAddress } from "viem";
@@ -94,36 +93,6 @@ HubV2.RegisterHuman.contractRegister(
   },
   { preRegisterDynamicContracts: true }
 );
-
-SafeAccount.ExecutionSuccess.handlerWithLoader({
-  loader: async ({ event, context }) => {
-    let transfers = await context.Transfer.getWhere.transactionHash.eq(
-      event.transaction.hash
-    );
-
-    return { transfers };
-  },
-  handler: async ({ event, context, loaderReturn }) => {
-    const { transfers } = loaderReturn;
-
-    const transfer = transfers.find(
-      (t) =>
-        t.transferType === "StreamCompleted" ||
-        t.transferType === "PersonalMint"
-    );
-    if (transfer) {
-      context.Transfer.set({
-        ...transfer,
-        safeTxHash: event.params.txHash,
-      });
-    } else if (transfers.length > 0) {
-      context.Transfer.set({
-        ...transfers[0],
-        safeTxHash: event.params.txHash,
-      });
-    }
-  },
-});
 
 HubV2.RegisterOrganization.handler(async ({ event, context }) => {
   context.Avatar.set({

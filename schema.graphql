@@ -24,16 +24,20 @@ enum TransferType {
   MetriFee
 }
 
-type Transfer {
-  # id is: transactionHash-logIndex
-  id: ID!
+type Transaction {
+  id: ID! # transactionHash
   safeTxHash: String
   blockNumber: Int!
   timestamp: Int!
   transactionIndex: Int!
-  transactionHash: String! @index
+  transfers: [Transfer!]! @derivedFrom(field: "transaction")
+}
+
+type Transfer {
+  # id is: transactionHash-logIndex
+  id: ID!
+  transaction: Transaction!
   logIndex: Int!
-  # batchIndex: Int!
   # v1 or v2
   version: Int!
   # only for v2
@@ -41,15 +45,10 @@ type Transfer {
   from: String!
   to: String!
   value: BigInt!
-  # transaction type; either: Erc20WrapperTransfer | TransferSingle | TransferBatch | StreamCompleted | HubTransfer | Transfer
   transferType: TransferType!
-  # is either the v2 token-id or the v1 token address; both in address format
+  # is either the v2 token-id or the v1 token address
   token: String!
   isPartOfStreamOrHub: Boolean!
-  # demurrage can be applied both to sender and receiver
-  demurrageFrom: Transfer
-  demurrageTo: Transfer
-  metriFee: Transfer
 }
 
 type TrustRelation {

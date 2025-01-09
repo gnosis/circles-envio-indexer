@@ -38,7 +38,6 @@ export const handleTransfer = async ({
   transferType,
   avatarType,
   version,
-  demurrageTransferId,
 }: {
   event: eventLog<
     | Hub_HubTransfer_eventArgs
@@ -54,8 +53,17 @@ export const handleTransfer = async ({
   transferType: TransferType_t;
   avatarType: AvatarType_t;
   version: number;
-  demurrageTransferId?: string | undefined;
 }) => {
+  const transaction = await context.Transaction.get(event.transaction.hash);
+  if (!transaction) {
+    context.Transaction.set({
+      id: event.transaction.hash,
+      safeTxHash: undefined,
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionIndex: event.transaction.transactionIndex,
+    });
+  }
   for (let i = 0; i < tokens.length; i++) {
     const token = await context.Token.get(tokens[i]);
     if (!token) {
@@ -111,11 +119,7 @@ export const handleTransfer = async ({
 
     const transferEntity: Transfer = {
       id: `${event.transaction.hash}-${event.logIndex}`,
-      safeTxHash: undefined,
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionIndex: event.transaction.transactionIndex,
-      transactionHash: event.transaction.hash,
+      transaction_id: event.transaction.hash,
       logIndex: event.logIndex,
       from: event.params.from,
       to: event.params.to,
@@ -125,9 +129,6 @@ export const handleTransfer = async ({
       transferType,
       version,
       isPartOfStreamOrHub: false,
-      demurrageFrom_id: demurrageTransferId,
-      demurrageTo_id: undefined,
-      metriFee_id: undefined,
     };
     context.Transfer.set(transferEntity);
 

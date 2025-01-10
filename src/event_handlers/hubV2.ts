@@ -180,7 +180,7 @@ HubV2.PersonalMint.handlerWithLoader({
   loader: async ({ event, context }) => {
     const [avatar, transfers] = await Promise.all([
       context.Avatar.get(event.params.human),
-      context.Transfer.getWhere.transaction_id.eq(event.transaction.hash),
+      context.Transfer.getWhere.transactionHash.eq(event.transaction.hash),
     ]);
 
     return {
@@ -261,7 +261,7 @@ NameRegistry.UpdateMetadataDigest.handler(async ({ event, context }) => {
 
 HubV2.StreamCompleted.handlerWithLoader({
   loader: async ({ event, context }) => {
-    let transfers = await context.Transfer.getWhere.transaction_id.eq(
+    let transfers = await context.Transfer.getWhere.transactionHash.eq(
       event.transaction.hash
     );
 
@@ -280,6 +280,7 @@ HubV2.StreamCompleted.handlerWithLoader({
     context.Transfer.set({
       id: `${event.transaction.hash}-stream`,
       transaction_id: event.transaction.hash,
+      transactionHash: event.transaction.hash,
       logIndex: event.logIndex,
       from: event.params.from,
       to: event.params.to,
@@ -341,7 +342,7 @@ HubV2.DiscountCost.handlerWithLoader({
       event.params.id.toString()
     );
     const avatarBalance = await context.AvatarBalance.get(avatarBalanceId);
-    const transfers = await context.Transfer.getWhere.transaction_id.eq(
+    const transfers = await context.Transfer.getWhere.transactionHash.eq(
       event.transaction.hash
     );
 

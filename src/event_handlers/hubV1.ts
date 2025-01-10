@@ -1,9 +1,10 @@
 import { Hub, PersonalCRC } from "generated";
-import { maxUint256 } from "viem";
+import { maxUint256, zeroAddress } from "viem";
 import { incrementStats } from "../incrementStats";
 import { handleTransfer } from "../common/handleTransfer";
 import { defaultAvatarProps, makeAvatarBalanceEntityId } from "../utils";
 import { getProfileMetadataFromGardenApi } from "../gardenApi";
+import { Transfer_t } from "generated/src/db/Entities.gen";
 
 // ###############
 // #### TOKEN ####
@@ -106,7 +107,7 @@ PersonalCRC.Transfer.handler(
 
 Hub.HubTransfer.handlerWithLoader({
   loader: async ({ event, context }) => {
-    const transfers = await context.Transfer.getWhere.transaction_id.eq(
+    const transfers = await context.Transfer.getWhere.transactionHash.eq(
       event.transaction.hash
     );
 
@@ -122,19 +123,40 @@ Hub.HubTransfer.handlerWithLoader({
       });
     }
 
-    context.Transfer.set({
-      id: `${event.transaction.hash}-stream`,
-      transaction_id: event.transaction.hash,
-      logIndex: event.logIndex,
-      from: event.params.from,
-      to: event.params.to,
-      operator: undefined,
-      value: event.params.amount,
-      token: event.srcAddress,
-      transferType: "HubTransfer",
-      version: 1,
-      isPartOfStreamOrHub: false,
-    });
+    const transactionToId = `${event.transaction.hash}-${event.params.to}`;
+    if (event.params.to !== zeroAddress) {
+      context.Transfer.set({
+        id: `${event.transaction.hash}-${event.params.to}-stream`,
+        transaction_id: transactionToId,
+        transactionHash: event.transaction.hash,
+        logIndex: event.logIndex,
+        from: event.params.from,
+        to: event.params.to,
+        operator: undefined,
+        value: event.params.amount,
+        token: event.srcAddress,
+        transferType: "HubTransfer",
+        version: 1,
+        isPartOfStreamOrHub: false,
+      });
+    }
+    const transactionFromId = `${event.transaction.hash}-${event.params.from}`;
+    if (event.params.from !== zeroAddress) {
+      context.Transfer.set({
+        id: `${event.transaction.hash}-${event.params.from}-stream`,
+        transaction_id: transactionFromId,
+        transactionHash: event.transaction.hash,
+        logIndex: event.logIndex,
+        from: event.params.from,
+        to: event.params.to,
+        operator: undefined,
+        value: event.params.amount,
+        token: event.srcAddress,
+        transferType: "HubTransfer",
+        version: 1,
+        isPartOfStreamOrHub: false,
+      });
+    }
   },
 });
 

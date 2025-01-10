@@ -54,15 +54,35 @@ export const handleTransfer = async ({
   avatarType: AvatarType_t;
   version: number;
 }) => {
-  const transaction = await context.Transaction.get(event.transaction.hash);
-  if (!transaction) {
-    context.Transaction.set({
-      id: event.transaction.hash,
-      safeTxHash: undefined,
-      blockNumber: event.block.number,
-      timestamp: event.block.timestamp,
-      transactionIndex: event.transaction.transactionIndex,
-    });
+  const transactionToId = `${event.transaction.hash}-${event.params.to}`;
+  if (event.params.to !== zeroAddress) {
+    const transactionTo = await context.Transaction.get(transactionToId);
+    if (!transactionTo) {
+      context.Transaction.set({
+        id: transactionToId,
+        safeTxHash: undefined,
+        blockNumber: event.block.number,
+        timestamp: event.block.timestamp,
+        transactionIndex: event.transaction.transactionIndex,
+        transactionHash: event.transaction.hash,
+        avatar_id: event.params.to,
+      });
+    }
+  }
+  const transactionFromId = `${event.transaction.hash}-${event.params.from}`;
+  if (event.params.from !== zeroAddress) {
+    const transactionFrom = await context.Transaction.get(transactionFromId);
+    if (!transactionFrom) {
+      context.Transaction.set({
+        id: transactionFromId,
+        safeTxHash: undefined,
+        blockNumber: event.block.number,
+        timestamp: event.block.timestamp,
+        transactionIndex: event.transaction.transactionIndex,
+        transactionHash: event.transaction.hash,
+        avatar_id: event.params.from,
+      });
+    }
   }
   for (let i = 0; i < tokens.length; i++) {
     const token = await context.Token.get(tokens[i]);
@@ -117,20 +137,38 @@ export const handleTransfer = async ({
       }
     }
 
-    const transferEntity: Transfer = {
-      id: `${event.transaction.hash}-${event.logIndex}`,
-      transaction_id: event.transaction.hash,
-      logIndex: event.logIndex,
-      from: event.params.from,
-      to: event.params.to,
-      operator,
-      value: values[i],
-      token: tokens[i],
-      transferType,
-      version,
-      isPartOfStreamOrHub: false,
-    };
-    context.Transfer.set(transferEntity);
+    if (event.params.from !== zeroAddress) {
+      context.Transfer.set({
+        id: `${event.transaction.hash}-${event.params.from}-${event.logIndex}`,
+        transaction_id: transactionFromId,
+        transactionHash: event.transaction.hash,
+        logIndex: event.logIndex,
+        from: event.params.from,
+        to: event.params.to,
+        operator,
+        value: values[i],
+        token: tokens[i],
+        transferType,
+        version,
+        isPartOfStreamOrHub: false,
+      });
+    }
+    if (event.params.to !== zeroAddress) {
+      context.Transfer.set({
+        id: `${event.transaction.hash}-${event.params.to}-${event.logIndex}`,
+        transaction_id: transactionToId,
+        transactionHash: event.transaction.hash,
+        logIndex: event.logIndex,
+        from: event.params.from,
+        to: event.params.to,
+        operator,
+        value: values[i],
+        token: tokens[i],
+        transferType,
+        version,
+        isPartOfStreamOrHub: false,
+      });
+    }
 
     await updateAvatarBalance(context, values[i], event.block.timestamp, {
       id: event.params.to,

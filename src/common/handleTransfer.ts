@@ -3,7 +3,6 @@ import {
   handlerContext,
   Hub_HubTransfer_eventArgs,
   PersonalCRC_Transfer_eventArgs,
-  Transfer,
   HubV2_TransferSingle_eventArgs,
   HubV2_TransferBatch_eventArgs,
   WrappedERC20_Transfer_eventArgs,
@@ -54,35 +53,16 @@ export const handleTransfer = async ({
   avatarType: AvatarType_t;
   version: number;
 }) => {
-  const transactionToId = `${event.transaction.hash}-${event.params.to}`;
-  if (event.params.to !== zeroAddress) {
-    const transactionTo = await context.Transaction.get(transactionToId);
-    if (!transactionTo) {
-      context.Transaction.set({
-        id: transactionToId,
-        safeTxHash: undefined,
-        blockNumber: event.block.number,
-        timestamp: event.block.timestamp,
-        transactionIndex: event.transaction.transactionIndex,
-        transactionHash: event.transaction.hash,
-        avatar_id: event.params.to,
-      });
-    }
-  }
-  const transactionFromId = `${event.transaction.hash}-${event.params.from}`;
-  if (event.params.from !== zeroAddress) {
-    const transactionFrom = await context.Transaction.get(transactionFromId);
-    if (!transactionFrom) {
-      context.Transaction.set({
-        id: transactionFromId,
-        safeTxHash: undefined,
-        blockNumber: event.block.number,
-        timestamp: event.block.timestamp,
-        transactionIndex: event.transaction.transactionIndex,
-        transactionHash: event.transaction.hash,
-        avatar_id: event.params.from,
-      });
-    }
+  const transaction = await context.Transaction.get(event.transaction.hash);
+  if (!transaction) {
+    context.Transaction.set({
+      id: event.transaction.hash,
+      safeTxHash: undefined,
+      blockNumber: event.block.number,
+      timestamp: event.block.timestamp,
+      transactionIndex: event.transaction.transactionIndex,
+      transactionHash: event.transaction.hash,
+    });
   }
   for (let i = 0; i < tokens.length; i++) {
     const token = await context.Token.get(tokens[i]);
@@ -137,38 +117,38 @@ export const handleTransfer = async ({
       }
     }
 
-    if (event.params.from !== zeroAddress) {
-      context.Transfer.set({
-        id: `${event.transaction.hash}-${event.params.from}-${event.logIndex}`,
-        transaction_id: transactionFromId,
-        transactionHash: event.transaction.hash,
-        logIndex: event.logIndex,
-        from: event.params.from,
-        to: event.params.to,
-        operator,
-        value: values[i],
-        token: tokens[i],
-        transferType,
-        version,
-        isPartOfStreamOrHub: false,
-      });
-    }
+    const transferId = `${event.transaction.hash}-${event.logIndex}`;
     if (event.params.to !== zeroAddress) {
-      context.Transfer.set({
-        id: `${event.transaction.hash}-${event.params.to}-${event.logIndex}`,
-        transaction_id: transactionToId,
-        transactionHash: event.transaction.hash,
-        logIndex: event.logIndex,
-        from: event.params.from,
-        to: event.params.to,
-        operator,
-        value: values[i],
-        token: tokens[i],
-        transferType,
-        version,
-        isPartOfStreamOrHub: false,
+      const transactionTransferToId = `${event.transaction.hash}-${event.logIndex}-${event.params.to}`;
+      context.TransactionTransfer.set({
+        id: transactionTransferToId,
+        avatar_id: event.params.to,
+        transaction_id: event.transaction.hash,
+        transfer_id: transferId,
       });
     }
+    if (event.params.from !== zeroAddress) {
+      const transactionTransferFromId = `${event.transaction.hash}-${event.logIndex}-${event.params.from}`;
+      context.TransactionTransfer.set({
+        id: transactionTransferFromId,
+        avatar_id: event.params.from,
+        transaction_id: event.transaction.hash,
+        transfer_id: transferId,
+      });
+    }
+    context.Transfer.set({
+      id: transferId,
+      transactionHash: event.transaction.hash,
+      logIndex: event.logIndex,
+      from: event.params.from,
+      to: event.params.to,
+      operator,
+      value: values[i],
+      token: tokens[i],
+      transferType,
+      version,
+      isPartOfStreamOrHub: false,
+    });
 
     await updateAvatarBalance(context, values[i], event.block.timestamp, {
       id: event.params.to,

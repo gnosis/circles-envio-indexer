@@ -31,14 +31,20 @@ type Transaction {
   timestamp: Int!
   transactionIndex: Int!
   transactionHash: String! @index
+  transactionTransfers: [TransactionTransfer!]! @derivedFrom(field: "transaction")
+}
+
+type TransactionTransfer {
+  id: ID! # transactionHash-logIndex-avatarId
   avatar: Avatar! @index
-  transfers: [Transfer!]! @derivedFrom(field: "transaction")
+  transaction: Transaction!
+  transfer: Transfer!
 }
 
 type Transfer {
   # id is: transactionHash-logIndex
   id: ID!
-  transaction: Transaction!
+  transactions: [TransactionTransfer!]! @derivedFrom(field: "transfer")
   transactionHash: String! @index
   logIndex: Int!
   # v1 or v2

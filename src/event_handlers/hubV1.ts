@@ -123,40 +123,38 @@ Hub.HubTransfer.handlerWithLoader({
       });
     }
 
-    const transactionToId = `${event.transaction.hash}-${event.params.to}`;
+    const transferId = `${event.transaction.hash}-stream`;
     if (event.params.to !== zeroAddress) {
-      context.Transfer.set({
-        id: `${event.transaction.hash}-${event.params.to}-stream`,
-        transaction_id: transactionToId,
-        transactionHash: event.transaction.hash,
-        logIndex: event.logIndex,
-        from: event.params.from,
-        to: event.params.to,
-        operator: undefined,
-        value: event.params.amount,
-        token: event.srcAddress,
-        transferType: "HubTransfer",
-        version: 1,
-        isPartOfStreamOrHub: false,
+      const transactionTransferToId = `${event.transaction.hash}-${event.logIndex}-${event.params.to}`;
+      context.TransactionTransfer.set({
+        id: transactionTransferToId,
+        avatar_id: event.params.to,
+        transaction_id: event.transaction.hash,
+        transfer_id: transferId,
       });
     }
-    const transactionFromId = `${event.transaction.hash}-${event.params.from}`;
     if (event.params.from !== zeroAddress) {
-      context.Transfer.set({
-        id: `${event.transaction.hash}-${event.params.from}-stream`,
-        transaction_id: transactionFromId,
-        transactionHash: event.transaction.hash,
-        logIndex: event.logIndex,
-        from: event.params.from,
-        to: event.params.to,
-        operator: undefined,
-        value: event.params.amount,
-        token: event.srcAddress,
-        transferType: "HubTransfer",
-        version: 1,
-        isPartOfStreamOrHub: false,
+      const transactionTransferFromId = `${event.transaction.hash}-${event.logIndex}-${event.params.from}`;
+      context.TransactionTransfer.set({
+        id: transactionTransferFromId,
+        avatar_id: event.params.from,
+        transaction_id: event.transaction.hash,
+        transfer_id: transferId,
       });
     }
+    context.Transfer.set({
+      id: transferId,
+      transactionHash: event.transaction.hash,
+      logIndex: event.logIndex,
+      from: event.params.from,
+      to: event.params.to,
+      operator: undefined,
+      value: event.params.amount,
+      token: event.srcAddress,
+      transferType: "HubTransfer",
+      version: 1,
+      isPartOfStreamOrHub: false,
+    });
   },
 });
 

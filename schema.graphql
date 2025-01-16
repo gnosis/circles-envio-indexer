@@ -42,8 +42,8 @@ type Transfer {
   version: Int!
   # only for v2
   operator: String
-  from: String!
-  to: String!
+  from: String! @index
+  to: String! @index
   value: BigInt!
   transferType: TransferType!
   # is either the v2 token-id or the v1 token address

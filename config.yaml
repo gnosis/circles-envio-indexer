@@ -70,6 +70,11 @@ contracts:
     handler: src/event_handlers/hubV2.ts
     events:
       - event: ExecutionSuccess(bytes32 txHash, uint256 payment)
+  - name: CirclesBacking
+    handler: src/event_handlers/circlesBacking.ts
+    events:
+      - event: CirclesBackingInitiated(address indexed backer, address indexed circlesBackingInstance, address backingAsset, address personalCirclesAddress)
+      - event: CirclesBackingCompleted(address indexed backer, address indexed circlesBackingInstance, address lbp)
 
 networks:
   # - id: 10200

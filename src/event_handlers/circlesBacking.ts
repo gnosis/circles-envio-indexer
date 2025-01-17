@@ -21,6 +21,7 @@ CirclesBacking.CirclesBackingCompleted.handler(async ({ event, context }) => {
     event.transaction.hash
   );
 
+  // If the circles backing is not found, return
   if (!circlesBacking) {
     return;
   }

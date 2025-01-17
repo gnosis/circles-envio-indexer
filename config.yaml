@@ -122,4 +122,4 @@ networks:
       - name: PersonalCRC
       - name: CirclesBacking
         address:
-          - 0xD608978aD1e1473fa98BaD368e767C5b11e3b3cE
+          - 0x4bB5A425a68ed73Cf0B26ce79F5EEad9103C30fc

@@ -155,3 +155,22 @@ type Token {
   tokenOwner: Avatar!
   totalSupply: BigInt!
 }
+
+type CirclesBacking {
+  id: ID!
+  blockNumber: Int!
+  timestamp: Int!
+  transactionIndex: Int!
+  logIndex: Int!
+  transactionHash: String!
+  # The CirclesBacking instance address deployed by the factory
+  circlesBackingInstance: String!
+  # Who initiated the backing (backer)
+  backer: Avatar!
+  # Which asset is being used for backing
+  backingAsset: String!
+  # The address of the personal Circles token being backed
+  personalCirclesAddress: String!
+  # The address of the created LBP (Liquidity Bootstrapping Pool)
+  lbpAddress: String!
+}
